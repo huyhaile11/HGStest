@@ -1,48 +1,40 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LỊCH CỐNG HIẾN HGS - Mobile</title>
-
-  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Fonts & libs -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.25/dist/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
   <style>
-    body { font-family: 'Inter', sans-serif; background:#f5f7ff; }
-    .card { background:#fff; border-radius:1rem; box-shadow:0 4px 12px rgba(0,0,0,.08); }
+    body { font-family: 'Inter', sans-serif; background: #f5f7ff; }
+    .card { background: #fff; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
     .toast {
-      position: fixed; top:50%; left:50%; transform:translate(-50%,-50%);
-      background: rgba(99,102,241,0.95); color:white; padding:12px 20px; border-radius:10px;
-      font-weight:600; z-index:9999; animation:fadeInOut 2s forwards;
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: rgba(99, 102, 241, 0.95); color: white; padding: 12px 20px;
+      border-radius: 10px; font-weight: 600; z-index: 9999; animation: fadeInOut 2s forwards;
     }
     @keyframes fadeInOut {
-      0%{opacity:0;transform:translate(-50%,-55%)}
-      10%,90%{opacity:1;transform:translate(-50%,-50%)}
-      100%{opacity:0;transform:translate(-50%,-45%)}
+      0% { opacity: 0; transform: translate(-50%, -55%); }
+      10%, 90% { opacity: 1; transform: translate(-50%, -50%); }
+      100% { opacity: 0; transform: translate(-50%, -45%); }
     }
-    textarea { font-family: monospace; }
   </style>
 </head>
+
 <body class="p-3">
   <div class="max-w-lg mx-auto card p-4 space-y-4">
-    <!-- Header -->
     <div class="text-center">
       <h1 class="text-xl font-bold text-indigo-600">📅 LỊCH CỐNG HIẾN HGS</h1>
-      <p class="text-sm text-gray-500 mt-1">Nhập ca như: S; X; A; HC; 1X; 1-X; X1; X-1; 0.5X-1... (hỗ trợ ca gãy)</p>
+      <p class="text-sm text-gray-500 mt-1">Nhập ca như: S; X; A; HC; 1X; 1-X; X1; X-1; 0.5X-1...</p>
     </div>
 
-    <!-- Tuần, upload, paste, select -->
     <div class="space-y-2">
       <input id="week-name" type="text" placeholder="Tên tuần (VD: Tuần 44 - Tháng 10)"
-             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400">
-
+        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400">
       <div class="flex gap-2 flex-wrap">
         <button id="save-week" class="flex-1 bg-indigo-600 text-white rounded-lg py-2 font-semibold">💾 Lưu tuần</button>
         <select id="week-select" class="flex-1 border border-gray-300 rounded-lg text-sm px-2 py-2">
@@ -51,22 +43,17 @@
       </div>
 
       <div class="space-y-2">
-        <div class="flex gap-2">
-          <input type="file" id="excel-upload" accept=".xls,.xlsx" class="flex-1 border border-gray-300 rounded-lg px-2 py-2">
-          <button id="paste-btn" class="flex-1 bg-indigo-600 text-white rounded-lg py-2 font-semibold">📋 Dán dữ liệu Excel</button>
-        </div>
-        <textarea id="paste-area" rows="6" placeholder="Dán dữ liệu từ Excel / Google Sheets vào đây (B→W)..."
-                  class="hidden w-full border border-gray-300 rounded-lg p-2 text-sm"></textarea>
-        <select id="employee-select" class="w-full border border-gray-300 rounded-lg text-sm px-3 py-2">
+        <input type="file" id="excel-upload" accept=".xls,.xlsx"
+          class="w-full border border-gray-300 rounded-lg text-sm px-3 py-2">
+        <select id="employee-select"
+          class="w-full border border-gray-300 rounded-lg text-sm px-3 py-2">
           <option value="">-- Chọn nhân viên --</option>
         </select>
       </div>
     </div>
 
-    <!-- Các ngày -->
     <div id="days-container" class="space-y-3"></div>
 
-    <!-- Nút hành động -->
     <div class="grid grid-cols-1 gap-2">
       <button id="calc-week" class="w-full bg-indigo-600 text-white rounded-lg py-3 font-semibold">📅 Tính lịch tuần</button>
       <button id="export-pdf" class="w-full bg-blue-600 text-white rounded-lg py-3 font-semibold">📤 Xuất PDF</button>
@@ -74,12 +61,17 @@
       <button id="clear-all" class="w-full bg-red-500 text-white rounded-lg py-3 font-semibold">🗑 Xóa tất cả</button>
     </div>
 
-    <!-- Kết quả -->
     <div id="result-container" class="hidden">
       <div class="overflow-x-auto mt-3 rounded-lg border border-gray-200">
         <table class="w-full text-sm text-gray-700">
           <thead class="bg-indigo-100">
-            <tr><th class="px-2 py-1 text-left">Thứ</th><th class="px-2 py-1 text-left">Ca</th><th class="px-2 py-1 text-center">Giờ vào</th><th class="px-2 py-1 text-center">Giờ ra</th><th class="px-2 py-1 text-center">Tổng</th></tr>
+            <tr>
+              <th class="px-2 py-1 text-left">Thứ</th>
+              <th class="px-2 py-1 text-left">Ca</th>
+              <th class="px-2 py-1 text-center">Giờ vào</th>
+              <th class="px-2 py-1 text-center">Giờ ra</th>
+              <th class="px-2 py-1 text-center">Tổng</th>
+            </tr>
           </thead>
           <tbody id="result-body"></tbody>
         </table>
@@ -87,13 +79,12 @@
       <p id="tribute" class="text-center font-bold text-red-600 mt-2 hidden">BẠN ĐÃ CỐNG HIẾN HẾT MÌNH CẢ TUẦN!</p>
     </div>
 
-    <!-- ETD -->
     <div class="border-t pt-4 mt-4">
       <h2 class="text-lg font-semibold text-indigo-600 text-center mb-2">✈️ Tính giờ có mặt tại quầy</h2>
       <div class="space-y-2">
         <input id="etd" type="text" placeholder="Nhập ETD (HH:MM, ví dụ 23:45)"
-               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-indigo-400"
-               pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$">
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-indigo-400"
+          pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$">
         <div class="flex justify-center gap-4">
           <label class="flex items-center gap-1 text-sm"><input type="radio" name="flight" value="ND" checked> Nội địa</label>
           <label class="flex items-center gap-1 text-sm"><input type="radio" name="flight" value="QT"> Quốc tế</label>
@@ -103,7 +94,6 @@
       </div>
     </div>
 
-    <!-- Footer -->
     <p class="text-center text-sm font-semibold mt-4 bg-gradient-to-r from-indigo-500 via-blue-500 to-purple-500 bg-clip-text text-transparent drop-shadow-sm">
       ✨ Created by <span class="font-bold">Hải 9</span> ✨
     </p>
@@ -112,275 +102,170 @@
   <div id="toast"></div>
 
   <script>
-    /* ---------- helpers & state ---------- */
     const c = id => document.getElementById(id);
     const days = ["Thứ Hai","Thứ Ba","Thứ Tư","Thứ Năm","Thứ Sáu","Thứ Bảy","Chủ Nhật"];
     const shifts = { HC:{start:7.5,end:15.5}, A:{start:22,end:30}, X:{start:14,end:22}, S:{start:6,end:14} };
-    const showToast = msg => { const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2000); };
-
-    const fmt = t => String(Math.floor(t%24)).padStart(2,"0")+":"+String(Math.round((t%1)*60)).padStart(2,"0");
-
-    // combine two cells (C+E etc), add semicolon if both, ignore OFF
-    function combine(a,b){
-      const v1 = (a||"").toString().trim().toUpperCase();
-      const v2 = (b||"").toString().trim().toUpperCase();
-      let combined = [v1, v2].filter(Boolean).join(";");
-      if(!combined || combined.includes("OFF")) combined = "";
-      return combined;
-    }
-
-    // localStorage helpers
+    const showToast = msg => { const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2000); };
+    const fmt=t=>String(Math.floor(t%24)).padStart(2,"0")+":"+String(Math.round((t%1)*60)).padStart(2,"0");
     const saveWeeksList = arr => localStorage.setItem("weeks_list", JSON.stringify(arr));
     const loadWeeksList = ()=>JSON.parse(localStorage.getItem("weeks_list")||"[]");
     const keyWeek = n => "week_"+n;
 
-    /* ---------- create day inputs ---------- */
-    function createInputs(){
-      const box = c("days-container");
-      box.innerHTML = "";
-      days.forEach((d,i)=>{
-        box.innerHTML += `<div><label class="block text-sm font-semibold text-gray-700 mb-1">${d}</label>
-          <input id="day${i}" type="text" placeholder="Ví dụ: S; X; 1X; X-1"
-            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400"></div>`;
-      });
-    }
-    createInputs();
+    const createInputs = ()=>{ const box=c("days-container"); box.innerHTML="";
+      days.forEach((d,i)=>{ box.innerHTML+=`<div><label class="block text-sm font-semibold text-gray-700 mb-1">${d}</label>
+      <input id="day${i}" type="text" placeholder="Ví dụ: S; X; 1X; X-1"
+      class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400"></div>`; });
+    };
 
-    /* ---------- week save/load/delete ---------- */
-    function saveWeek(){
-      const n = c("week-name").value.trim(); if(!n){ showToast("Nhập tên tuần"); return; }
-      const data = {};
-      days.forEach((_,i)=> data["day"+i] = c("day"+i).value.trim());
+    const saveWeek = ()=>{ const n=c("week-name").value.trim(); if(!n){showToast("Nhập tên tuần");return;}
+      const data={}; days.forEach((_,i)=>data["day"+i]=c("day"+i).value.trim());
       localStorage.setItem(keyWeek(n), JSON.stringify(data));
-      let list = loadWeeksList(); if(!list.includes(n)){ list.push(n); saveWeeksList(list); fillWeekSelect(); }
+      let list=loadWeeksList(); if(!list.includes(n)){list.push(n); saveWeeksList(list); fillWeekSelect();}
       showToast("Đã lưu tuần "+n);
-    }
+    };
 
-    function fillWeekSelect(){
-      const s = c("week-select"); const list = loadWeeksList();
-      s.innerHTML = '<option value="">Chọn tuần</option>';
-      list.forEach(n=>{ const o=document.createElement("option"); o.value=n; o.textContent=n; s.appendChild(o); });
-    }
-    fillWeekSelect();
+    const fillWeekSelect = ()=>{ const s=c("week-select"); const list=loadWeeksList();
+      s.innerHTML='<option value="">Chọn tuần</option>';
+      list.forEach(n=>{const o=document.createElement("option");o.value=n;o.textContent=n;s.appendChild(o);});
+    };
 
-    function loadWeek(n){
-      const raw = localStorage.getItem(keyWeek(n)); if(!raw){ showToast("Tuần trống"); return; }
-      const d = JSON.parse(raw);
-      days.forEach((_,i)=> c("day"+i).value = d["day"+i] || "");
+    const loadWeek = n=>{ const raw=localStorage.getItem(keyWeek(n)); if(!raw){showToast("Tuần trống");return;}
+      const d=JSON.parse(raw); days.forEach((_,i)=>c("day"+i).value=d["day"+i]||"");
       showToast("Đã tải "+n);
-    }
+    };
 
-    function deleteWeek(){
-      const n = c("week-name").value.trim(); if(!n) return showToast("Nhập tên tuần");
+    const deleteWeek = ()=>{ const n=c("week-name").value.trim(); if(!n)return showToast("Nhập tên tuần");
       localStorage.removeItem(keyWeek(n));
-      let list = loadWeeksList().filter(x=>x!==n); saveWeeksList(list); fillWeekSelect();
-      days.forEach((_,i)=> c("day"+i).value = "");
+      let list=loadWeeksList().filter(x=>x!==n); saveWeeksList(list); fillWeekSelect();
+      days.forEach((_,i)=>c("day"+i).value="");
       showToast("Đã xóa tuần "+n);
-    }
+    };
 
-    function clearAll(){
-      if(!confirm("Xóa tất cả tuần?")) return;
+    const clearAll = ()=>{ if(!confirm("Xóa tất cả tuần?"))return;
       loadWeeksList().forEach(n=>localStorage.removeItem(keyWeek(n)));
-      saveWeeksList([]); fillWeekSelect(); days.forEach((_,i)=> c("day"+i).value="");
+      saveWeeksList([]); fillWeekSelect(); days.forEach((_,i)=>c("day"+i).value="");
       showToast("Đã xóa tất cả");
-    }
+    };
 
-    /* ---------- parse shift logic (same as trước) ---------- */
-    function parseShift(str){
-      str = (str||"").toString().trim().toUpperCase();
-      if(!str) return null;
-      // special H, M, DH like H3, M2
+    const parseShift = (str) => {
+      str = str.trim().toUpperCase();
+      if (!str) return null;
       const s = /^([A-Z]{1,2})(\d+)?$/.exec(str);
-      if(s && ["H","M","DH"].includes(s[1])) return { special: s[1], hours: +(s[2] || 0) };
-
+      if (s && ["H", "M", "DH"].includes(s[1])) return { special: s[1], hours: +(s[2] || 0) };
       const re = /^(\d*\.?\d*-?)?([A-Z]{1,2})(-?\d*\.?\d*)?$/;
       const m = re.exec(str);
-      if(!m) return { error: "Sai định dạng" };
+      if (!m) return { error: "Sai định dạng" };
       const [, pre, code, suf] = m;
-      if(!shifts[code]) return { error: "Ca không tồn tại" };
-
+      if (!shifts[code]) return { error: "Ca không tồn tại" };
       let { start, end } = shifts[code];
-
-      if(pre){
-        const clean = pre.replace("-","");
-        const val = parseFloat(clean || 0);
-        if(pre.includes("-")) start += val; else start -= val;
-      }
-
-      if(suf){
-        const clean = suf.replace("-","");
-        const val = parseFloat(clean || 0);
-        if(suf.startsWith("-")) end -= val; else end += val;
-      }
-
-      if(start >= end) end += 24;
+      if (pre) { const clean = pre.replace("-", ""); const val = parseFloat(clean || 0);
+        if (pre.includes("-")) start += val; else start -= val; }
+      if (suf) { const clean = suf.replace("-", ""); const val = parseFloat(clean || 0);
+        if (suf.startsWith("-")) end -= val; else end += val; }
+      if (start >= end) end += 24;
       return { start, end, dur: end - start };
-    }
+    };
 
-    /* ---------- calc week (display) ---------- */
-    function calcWeek(){
-      const tbody = c("result-body"); tbody.innerHTML = "";
-      let total = 0, full = true;
-      days.forEach((d,i)=>{
-        const v = (c("day"+i).value || "").toString().trim();
-        if(!v){ tbody.innerHTML += `<tr><td>${d}</td><td colspan=4 class="italic text-gray-400">Nghỉ</td></tr>`; full = false; return; }
-        let sum = 0;
-        const parts = v.split(";").map(x=>x.trim()).filter(Boolean);
-        parts.forEach((p,j)=>{
-          const r = parseShift(p);
-          if(r.error){
-            tbody.innerHTML += `<tr><td>${j?"":d}</td><td>${p}</td><td colspan=3 class="text-red-600">${r.error}</td></tr>`;
-            return;
-          }
-          if(r.special){
-            tbody.innerHTML += `<tr><td>${j?"":d}</td><td>${p}</td><td colspan=2 class="text-center">${r.special=="H"?"Học":r.special=="M"?"Họp":"Dạy"}</td><td>${r.hours}h</td></tr>`;
-            sum += r.hours;
-          } else {
-            tbody.innerHTML += `<tr><td>${j?"":d}</td><td>${p}</td><td class="text-center">${fmt(r.start)}</td><td class="text-center">${fmt(r.end)}</td><td>${r.dur.toFixed(1)}h</td></tr>`;
-            sum += r.dur;
-          }
-        });
-        if(parts.length>1) tbody.innerHTML += `<tr class="bg-indigo-50 font-medium"><td></td><td colspan=3>Tổng ngày</td><td>${sum.toFixed(1)}h</td></tr>`;
-        total += sum;
-      });
-      tbody.innerHTML += `<tr class="bg-indigo-100 font-bold"><td colspan=4>Tổng tuần</td><td>${total.toFixed(1)}h</td></tr>`;
+    const calcWeek = ()=>{ const tbody=c("result-body"); tbody.innerHTML=""; let total=0,full=true;
+      days.forEach((d,i)=>{ const v=c("day"+i).value.trim();
+        if(!v){tbody.innerHTML+=`<tr><td>${d}</td><td colspan=4 class="italic text-gray-400">Nghỉ</td></tr>`; full=false;return;}
+        let sum=0; const parts=v.split(";").map(x=>x.trim()).filter(Boolean);
+        parts.forEach((p,j)=>{ const r=parseShift(p);
+          if(r.error){tbody.innerHTML+=`<tr><td>${j?"":d}</td><td>${p}</td><td colspan=3 class="text-red-600">${r.error}</td></tr>`;return;}
+          if(r.special){tbody.innerHTML+=`<tr><td>${j?"":d}</td><td>${p}</td><td colspan=2 class="text-center">${r.special=="H"?"Học":r.special=="M"?"Họp":"Dạy"}</td><td>${r.hours}h</td></tr>`; sum+=r.hours;}
+          else{tbody.innerHTML+=`<tr><td>${j?"":d}</td><td>${p}</td><td class="text-center">${fmt(r.start)}</td><td class="text-center">${fmt(r.end)}</td><td>${r.dur.toFixed(1)}h</td></tr>`; sum+=r.dur;} });
+        if(parts.length>1)tbody.innerHTML+=`<tr class="bg-indigo-50 font-medium"><td></td><td colspan=3>Tổng ngày</td><td>${sum.toFixed(1)}h</td></tr>`; total+=sum; });
+      tbody.innerHTML+=`<tr class="bg-indigo-100 font-bold"><td colspan=4>Tổng tuần</td><td>${total.toFixed(1)}h</td></tr>`;
       c("result-container").classList.remove("hidden");
-      c("tribute").classList.toggle("hidden", !full);
+      c("tribute").classList.toggle("hidden",!full);
       showToast("Đã tính xong!");
-    }
+    };
 
-    /* ---------- ETD calc ---------- */
-    function calcETD(){
-      const val = c("etd").value.trim();
+    const calcETD = ()=>{ const val=c("etd").value.trim();
       if(!/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(val)) return showToast("Nhập giờ ETD dạng 24h (VD: 21:30)");
-      const [h,m] = val.split(":").map(Number);
-      let min = h*60 + m;
-      const type = document.querySelector('input[name="flight"]:checked').value;
-      const offset = (type==="QT") ? 220 : 160;
-      min -= offset; if(min < 0) min += 1440;
-      const H = Math.floor(min/60), M = min%60;
-      c("etd-result").textContent = `🕒 Giờ có mặt: ${String(H).padStart(2,"0")}:${String(M).padStart(2,"0")}`;
+      const [h,m]=val.split(":").map(Number); let min=h*60+m;
+      const type=document.querySelector('input[name="flight"]:checked').value;
+      const offset=type=="QT"?220:160; min-=offset; if(min<0)min+=1440;
+      const H=Math.floor(min/60), M=min%60;
+      c("etd-result").textContent=`🕒 Giờ có mặt: ${String(H).padStart(2,"0")}:${String(M).padStart(2,"0")}`;
       showToast("Đã tính giờ có mặt!");
-    }
+    };
 
-    /* ---------- export PDF (with Vietnamese font) ---------- */
-    async function exportPDF(){
-      if(c("result-container").classList.contains("hidden")){ showToast("Hãy tính lịch trước!"); return; }
+    const exportPDF = async ()=>{ if(c("result-container").classList.contains("hidden")){showToast("Hãy tính lịch trước!");return;}
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation:"portrait", unit:"pt", format:"a4" });
-      // load DejaVu font (script returns var DejaVuSansNormal)
       const fontUrl = "https://cdn.jsdelivr.net/gh/Trung0308/unicode-fonts/DejaVuSans-normal.js";
-      try{
-        const fontFile = await fetch(fontUrl).then(r=>r.text());
-        eval(fontFile);
-        doc.addFileToVFS("DejaVuSans-normal.ttf", DejaVuSansNormal);
-        doc.addFont("DejaVuSans-normal.ttf", "DejaVuSans", "normal");
-        doc.setFont("DejaVuSans");
-      }catch(e){
-        // fallback (may lose some Vietnamese glyphs)
-        console.warn("Font load failed", e);
-      }
+      const fontFile = await fetch(fontUrl).then(r => r.text());
+      eval(fontFile);
+      doc.addFileToVFS("DejaVuSans-normal.ttf", DejaVuSansNormal);
+      doc.addFont("DejaVuSans-normal.ttf", "DejaVuSans", "normal");
+      doc.setFont("DejaVuSans");
       doc.setFontSize(16);
-      doc.text("LỊCH CỐNG HIẾN HGS - "+(c("week-name").value||""), 40, 50);
-      const rows = [...c("result-body").querySelectorAll("tr")].map(tr => [...tr.cells].map(td=>td.textContent));
-      doc.autoTable({
-        head: [["Thứ","Ca","Giờ vào","Giờ ra","Tổng"]],
-        body: rows,
-        startY: 70,
-        styles: { font: "DejaVuSans", fontSize: 10 },
-        headStyles: { fillColor:[99,102,241], textColor:255 }
-      });
+      doc.text("LỊCH CỐNG HIẾN HGS - "+(c("week-name").value||""),40,50);
+      const rows=[...c("result-body").querySelectorAll("tr")].map(tr=>[...tr.cells].map(td=>td.textContent));
+      doc.autoTable({ head:[["Thứ","Ca","Giờ vào","Giờ ra","Tổng"]], body:rows, startY:70, styles:{ font:"DejaVuSans", fontSize:10 }, headStyles:{ fillColor:[99,102,241], textColor:255 } });
       doc.save("Lich_HGS.pdf");
       showToast("Đã xuất PDF (hỗ trợ tiếng Việt)");
-    }
+    };
 
-    /* ---------- Excel upload: read sheet "BẢNG CHẤM CÔNG NHÂN VIÊN" ---------- */
+    // 🧩 Đọc Excel: sheet "BẢNG CHẤM CÔNG NHÂN VIÊN", ghép C+E; F+H; ...; xử lý OFF
     let employeeData = [];
-
-    // parse array rows (shared by paste and sheet)
-    function buildEmployeeListFromRows(rows){
-      if(!rows || rows.length===0) return [];
-      // If first row is header (contains 'Tên' or 'BẢNG'), drop it
-      let startIndex = 0;
-      const first = rows[0].map(cell => (cell||"").toString().toLowerCase()).join(" ");
-      if(first.includes("tên") || first.includes("bảng") || first.includes("nhân viên")) startIndex = 1;
-      const data = rows.slice(startIndex).map(row => ({
-        name: (row[1] || "").toString().trim(),
-        mon: combine(row[2], row[4]),
-        tue: combine(row[5], row[7]),
-        wed: combine(row[8], row[10]),
-        thu: combine(row[11], row[13]),
-        fri: combine(row[14], row[16]),
-        sat: combine(row[17], row[19]),
-        sun: combine(row[20], row[22])
-      })).filter(e => e.name);
-      return data;
+    function combine(a,b){
+      const v1=(a||"").toString().trim().toUpperCase();
+      const v2=(b||"").toString().trim().toUpperCase();
+      let combined=[v1,v2].filter(Boolean).join(";");
+      if(!combined || combined.includes("OFF")) combined="";
+      return combined;
     }
 
-    // PASTE handler (for iPhone / clipboard)
-    c("paste-btn").onclick = () => {
-      c("paste-area").classList.toggle("hidden");
-      if(!c("paste-area").classList.contains("hidden")) c("paste-area").focus();
-    }
-    function parsePasted(){
-      const text = c("paste-area").value.trim();
-      if(!text){ showToast("Không có dữ liệu!"); return; }
-      // parse by lines, split by tab or comma
-      const rows = text.split(/\r?\n/).map(r => r.split(/\t|,/));
-      employeeData = buildEmployeeListFromRows(rows);
-      if(employeeData.length===0){ showToast("Không đọc được dữ liệu!"); return; }
-      populateEmployeeSelect();
-      showToast("✅ Đã đọc dữ liệu dán!");
-    }
-    c("paste-area").addEventListener("paste", ()=> setTimeout(parsePasted, 100));
+    c("excel-upload").addEventListener("change",(e)=>{
+      const file=e.target.files[0]; if(!file)return;
+      const reader=new FileReader();
+      reader.onload=(evt)=>{
+        const data=new Uint8Array(evt.target.result);
+        const workbook=XLSX.read(data,{type:"array"});
+        const sheetName=workbook.SheetNames.find(n=>n.trim().toLowerCase()==="bảng chấm công nhân viên");
+        if(!sheetName){showToast("❌ Không tìm thấy sheet 'BẢNG CHẤM CÔNG NHÂN VIÊN'!");return;}
+        const sheet=XLSX.utils.sheet_to_json(workbook.Sheets[sheetName],{header:1});
+        if(sheet.length<2){showToast("❌ Sheet trống hoặc sai cấu trúc!");return;}
 
-    // EXCEL FILE upload (desktop/iPhone) - use readAsBinaryString for iOS compatibility
-    c("excel-upload").addEventListener("change", (e) => {
-      const file = e.target.files[0]; if(!file) return;
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        // read as binary string to be compatible with iPhone's FileReader behaviour
-        const binary = evt.target.result;
-        const workbook = XLSX.read(binary, { type: "binary" });
-        const sheetName = workbook.SheetNames.find(n => n && n.trim().toLowerCase() === "bảng chấm công nhân viên".toLowerCase());
-        if(!sheetName){ showToast("❌ Không tìm thấy sheet 'BẢNG CHẤM CÔNG NHÂN VIÊN'!"); return; }
-        const sheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
-        employeeData = buildEmployeeListFromRows(sheet);
-        if(employeeData.length === 0){ showToast("❌ Không tìm thấy nhân viên nào!"); return; }
-        populateEmployeeSelect();
+        employeeData=sheet.slice(1).map(row=>({
+          name:(row[1]||"").toString().trim(),
+          mon:combine(row[2],row[4]),
+          tue:combine(row[5],row[7]),
+          wed:combine(row[8],row[10]),
+          thu:combine(row[11],row[13]),
+          fri:combine(row[14],row[16]),
+          sat:combine(row[17],row[19]),
+          sun:combine(row[20],row[22])
+        })).filter(e=>e.name);
+
+        if(employeeData.length===0){showToast("❌ Không tìm thấy nhân viên nào!");return;}
+        const sel=c("employee-select");
+        sel.innerHTML='<option value="">-- Chọn nhân viên --</option>';
+        employeeData.sort((a,b)=>a.name.localeCompare(b.name,"vi",{sensitivity:"base"}))
+          .forEach(e=>{const opt=document.createElement("option");opt.value=e.name;opt.textContent=e.name;sel.appendChild(opt);});
         showToast("✅ Đã tải danh sách nhân viên!");
       };
-      // Use binary read for better iOS compatibility
-      reader.readAsBinaryString(file);
+      reader.readAsArrayBuffer(file);
     });
 
-    function populateEmployeeSelect(){
-      const sel = c("employee-select");
-      sel.innerHTML = '<option value="">-- Chọn nhân viên --</option>';
-      employeeData.sort((a,b) => a.name.localeCompare(b.name, "vi", { sensitivity: "base" }))
-        .forEach(e => { const opt = document.createElement("option"); opt.value = e.name; opt.textContent = e.name; sel.appendChild(opt); });
-    }
-
-    // when choose employee
-    c("employee-select").addEventListener("change", (e) => {
-      const name = e.target.value;
-      if(!name) return;
-      const emp = employeeData.find(x => x.name.trim().toLowerCase() === name.trim().toLowerCase());
-      if(!emp) return showToast("Không tìm thấy nhân viên!");
-      ["mon","tue","wed","thu","fri","sat","sun"].forEach((d,i) => c("day"+i).value = emp[d] || "");
-      showToast("📅 Đã tải lịch của " + name);
+    c("employee-select").addEventListener("change",(e)=>{
+      const name=e.target.value; if(!name)return;
+      const emp=employeeData.find(x=>x.name.trim().toLowerCase()===name.trim().toLowerCase());
+      if(!emp)return showToast("Không tìm thấy nhân viên!");
+      ["mon","tue","wed","thu","fri","sat","sun"].forEach((d,i)=>c("day"+i).value=emp[d]||"");
+      showToast("📅 Đã tải lịch của "+name);
     });
 
-    /* ---------- wire up other buttons ---------- */
-    document.addEventListener("DOMContentLoaded", ()=>{ /* createInputs already called */ fillWeekSelect(); });
-    c("save-week").onclick = saveWeek;
-    c("week-select").onchange = e => { const v = e.target.value; if(v){ c("week-name").value = v; loadWeek(v); } };
-    c("calc-week").onclick = calcWeek;
-    c("calc-etd").onclick = calcETD;
-    c("export-pdf").onclick = exportPDF;
-    c("clear-week").onclick = deleteWeek;
-    c("clear-all").onclick = clearAll;
-
+    document.addEventListener("DOMContentLoaded",()=>{createInputs();fillWeekSelect();});
+    c("save-week").onclick=saveWeek;
+    c("week-select").onchange=e=>{const v=e.target.value;if(v){c("week-name").value=v;loadWeek(v);}};
+    c("calc-week").onclick=calcWeek;
+    c("calc-etd").onclick=calcETD;
+    c("export-pdf").onclick=exportPDF;
+    c("clear-week").onclick=deleteWeek;
+    c("clear-all").onclick=clearAll;
   </script>
 </body>
 </html>
