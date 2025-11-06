@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LỊCH CỐNG HIẾN HGS - Full</title>
+
+  <!-- Tailwind + font -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- XLSX (đọc file Excel) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #f5f7ff; }
+    .card { background: #fff; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .toast {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: rgba(99,102,241,0.95); color: white; padding: 10px 18px;
+      border-radius: 10px; font-weight: 600; z-index: 9999; animation: fadeInOut 2s forwards;
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translate(-50%, -55%); }
+      10%, 90% { opacity: 1; transform: translate(-50%, -50%); }
+      100% { opacity: 0; transform: translate(-50%, -45%); }
+    }
+    #suggestions { z-index: 50; }
+    table.result-table th, table.result-table td { padding: 8px 6px; border-bottom: 1px solid #eee; font-size: 13px; text-align:left; vertical-align: middle; }
+    table.result-table td.center { text-align:center; }
+    .board-yes { background: rgba(16,185,129,0.06); } /* xanh nhạt */
+    .board-no { background: rgba(239,68,68,0.06); }  /* đỏ nhạt */
+  </style>
+</head>
+<body class="p-3">
+  <div class="max-w-lg mx-auto card p-4 space-y-4">
+    <div class="text-center">
+      <h1 class="text-xl font-bold text-indigo-600">📅 LỊCH CỐNG HIẾN HGS</h1>
+      <p class="text-sm text-gray-500 mt-1">Nhập ca như: S; X; A; HC; 1X; 1-X; X1; X-1; 0.5X-1...</p>
+    </div>
+
+    <!-- Tuần + Excel -->
+    <div class="space-y-2">
+      <input id="week-name" type="text" placeholder="Tên tuần (VD: Tuần 44 - Tháng 10)"
+             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400">
+      <div class="flex gap-2 flex-wrap">
+        <button id="save-week" class="flex-1 bg-indigo-600 text-white rounded-lg py-2 font-semibold">💾 Lưu tuần</button>
+        <select id="week-select" class="flex-1 border border-gray-300 rounded-lg text-sm px-2 py-2">
+          <option value="">Chọn tuần</option>
+        </select>
+      </div>
+
+      <div class="space-y-2">
+        <input type="file" id="excel-upload" accept=".xls,.xlsx"
+               class="w-full border border-gray-300 rounded-lg text-sm px-3 py-2">
+        <select id="employee-select"
+                class="w-full border border-gray-300 rounded-lg text-sm px-3 py-2">
+          <option value="">-- Chọn nhân viên --</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Nhập ca -->
+    <div id="days-container" class="space-y-3"></div>
+
+    <!-- Nút hành động -->
+    <div class="grid grid-cols-1 gap-2">
+      <button id="calc-week" class="w-full bg-indigo-600 text-white rounded-lg py-3 font-semibold">📅 Tính lịch tuần</button>
+      <button id="clear-week" class="w-full bg-yellow-500 text-white rounded-lg py-3 font-semibold">🧹 Xóa tuần này</button>
+      <button id="clear-all" class="w-full bg-red-500 text-white rounded-lg py-3 font-semibold">🗑 Xóa tất cả</button>
+    </div>
+
+    <!-- Kết quả lịch tuần -->
+    <div id="result-container" class="hidden">
+      <div class="overflow-x-auto mt-3 rounded-lg border border-gray-200">
+        <table class="w-full text-sm text-gray-700">
+          <thead class="bg-indigo-100">
+            <tr>
+              <th class="px-2 py-1 text-left">Thứ</th>
+              <th class="px-2 py-1 text-left">Ca</th>
+              <th class="px-2 py-1 text-center">Giờ vào</th>
+              <th class="px-2 py-1 text-center">Giờ ra</th>
+              <th class="px-2 py-1 text-center">Tổng</th>
+            </tr>
+          </thead>
+          <tbody id="result-body"></tbody>
+        </table>
+      </div>
+      <p id="tribute" class="text-center font-bold text-red-600 mt-2 hidden">BẠN ĐÃ CỐNG HIẾN HẾT MÌNH CẢ TUẦN!</p>
+
+      <!-- Created by -->
+      <p class="text-center mt-3 font-semibold text-indigo-600 text-sm bg-indigo-50 py-2 rounded-lg shadow-sm">✨ Created by Hải 9 ✨</p>
+    </div>
+
+    <!-- Tra cứu chuyến bay -->
+    <div class="border-t pt-4 mt-4">
+      <h2 class="text-lg font-semibold text-indigo-600 text-center mb-2">🔍 Tra cứu chuyến bay</h2>
+      <div class="space-y-2">
+        <input id="search-name" type="text" placeholder="Nhập tên nhân viên (VD: HẢI 9 hoặc Hai 9)"
+               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-indigo-400"
+               autocomplete="off">
+        <div id="suggestions" class="bg-white border border-gray-200 rounded-lg shadow hidden max-h-40 overflow-y-auto"></div>
+        <div id="flight-result" class="mt-3 text-sm"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="toast"></div>
+
+<script>
+  /* ======== INIT MINIMAL - hiển thị khung nhập ca ======== */
+  document.addEventListener("DOMContentLoaded", () => {
+    const days = ["Thứ Hai","Thứ Ba","Thứ Tư","Thứ Năm","Thứ Sáu","Thứ Bảy","Chủ Nhật"];
+    const box = document.getElementById("days-container");
+    box.innerHTML = "";
+    days.forEach((d,i)=>{
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = `<label class="block text-sm font-semibold text-gray-700 mb-1">${d}</label>
+        <input id="day${i}" type="text" placeholder="Ví dụ: S; X; 1X; X-1"
+        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400">`;
+      box.appendChild(wrapper);
+    });
+  });
+</script>
+
+<script>
+/* ================= PART 2/2: JAVASCRIPT HOÀN CHỈNH ================= */
+
+/* ---------------- Helpers & state ---------------- */
+const c = id => document.getElementById(id);
+const days = ["Thứ Hai","Thứ Ba","Thứ Tư","Thứ Năm","Thứ Sáu","Thứ Bảy","Chủ Nhật"];
+const daysOrder = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
+
+let employeeData = []; // from bảng chấm công QT / NĐ
+let flightData = [];   // parsed tokens from MON..SUN
+
+const showToast = msg => {
+  const t = document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2000);
+};
+
+/* Remove diacritics and normalize string for matching (returns uppercase no-diacritics) */
+function removeDiacritics(str){
+  if(!str) return "";
+  // Normalize and remove combining diacritical marks
+  const s = str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  // Replace Đ/đ with D/d
+  return s.replace(/đ/g,'d').replace(/Đ/g,'D');
+}
+function normalizeText(s){
+  return removeDiacritics((s||"").toString().trim().replace(/\s+/g,' ').toUpperCase());
+}
+
+/* ---------------- UI: create inputs, week storage ---------------- */
+function createInputs(){
+  const box = c("days-container");
+  box.innerHTML = "";
+  days.forEach((d,i)=>{
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = `<label class="block text-sm font-semibold text-gray-700 mb-1">${d}</label>
+      <input id="day${i}" type="text" placeholder="Ví dụ: S; X; 1X; X-1"
+      class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400">`;
+    box.appendChild(wrapper);
+  });
+}
+
+const saveWeeksList = arr => localStorage.setItem("weeks_list", JSON.stringify(arr));
+const loadWeeksList = ()=>JSON.parse(localStorage.getItem("weeks_list")||"[]");
+const keyWeek = n => "week_"+n;
+
+const saveWeek = ()=> {
+  const n = c("week-name").value.trim();
+  if(!n){ showToast("Nhập tên tuần"); return; }
+  const data = {};
+  days.forEach((_,i)=> data["day"+i] = c("day"+i).value.trim());
+  localStorage.setItem(keyWeek(n), JSON.stringify(data));
+  let list = loadWeeksList(); if(!list.includes(n)){ list.push(n); saveWeeksList(list); fillWeekSelect(); }
+  showToast("Đã lưu tuần "+n);
+};
+
+const fillWeekSelect = ()=> {
+  const s = c("week-select"); if(!s) return;
+  const list = loadWeeksList();
+  s.innerHTML = '<option value="">Chọn tuần</option>';
+  list.forEach(n=>{ const o = document.createElement('option'); o.value=n; o.textContent=n; s.appendChild(o); });
+};
+
+const loadWeek = n => {
+  const raw = localStorage.getItem(keyWeek(n));
+  if(!raw){ showToast("Tuần trống"); return; }
+  const d = JSON.parse(raw);
+  days.forEach((_,i)=> c("day"+i).value = d["day"+i]||"");
+  showToast("Đã tải "+n);
+};
+
+const deleteWeek = ()=> {
+  const n = c("week-name").value.trim();
+  if(!n) return showToast("Nhập tên tuần");
+  localStorage.removeItem(keyWeek(n));
+  let list = loadWeeksList().filter(x=>x!==n); saveWeeksList(list); fillWeekSelect();
+  days.forEach((_,i)=> c("day"+i).value="");
+  showToast("Đã xóa tuần "+n);
+};
+
+const clearAll = ()=> {
+  if(!confirm("Xóa tất cả tuần?")) return;
+  loadWeeksList().forEach(n=>localStorage.removeItem(keyWeek(n)));
+  saveWeeksList([]); fillWeekSelect(); days.forEach((_,i)=> c("day"+i).value="");
+  showToast("Đã xóa tất cả");
+};
+
+/* ---------------- Shift parsing & week calc (kept) ---------------- */
+const shifts = { HC:{start:7.5,end:15.5}, A:{start:22,end:30}, X:{start:14,end:22}, S:{start:6,end:14} };
+
+function parseShift(str){
+  str = (str||"").toString().trim().toUpperCase();
+  if(!str) return null;
+  const s = /^([A-Z]{1,2})(\d+)?$/.exec(str);
+  if(s && ["H","M","DH"].includes(s[1])) return { special: s[1], hours: +(s[2]||0) };
+  const re = /^(\d*\.?\d*-?)?([A-Z]{1,2})(-?\d*\.?\d*)?$/;
+  const m = re.exec(str);
+  if(!m) return { error: "Sai định dạng" };
+  const [, pre, code, suf] = m;
+  if(!shifts[code]) return { error: "Ca không tồn tại" };
+  let { start, end } = shifts[code];
+  if(pre){ const clean = pre.replace("-",""); const val = parseFloat(clean || 0); if(pre.includes("-")) start += val; else start -= val; }
+  if(suf){ const clean = suf.replace("-",""); const val = parseFloat(clean || 0); if(suf.startsWith("-")) end -= val; else end += val; }
+  if(start >= end) end += 24;
+  return { start, end, dur: end - start };
+}
+
+function fmtHoursToHHMM(t){
+  const hh = Math.floor(t % 24);
+  const mm = Math.round((t % 1) * 60);
+  return String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0");
+}
+
+function calcWeek(){
+  const tbody = c("result-body"); if(!tbody) return;
+  tbody.innerHTML = ""; let total=0, full=true;
+  days.forEach((d,i)=>{
+    const v = c("day"+i).value.trim();
+    if(!v){ tbody.innerHTML += `<tr><td>${d}</td><td colspan=4 class="italic text-gray-400">Nghỉ</td></tr>`; full=false; return; }
+    let sum=0; const parts = v.split(";").map(x=>x.trim()).filter(Boolean);
+    parts.forEach((p,j)=>{
+      const r = parseShift(p);
+      if(r && r.error){ tbody.innerHTML += `<tr><td>${j? "": d}</td><td>${p}</td><td colspan=3 class="text-red-600">${r.error}</td></tr>`; return; }
+      if(r && r.special){ tbody.innerHTML += `<tr><td>${j? "": d}</td><td>${p}</td><td colspan=2 class="text-center">${r.special=="H"?"Học":r.special=="M"?"Họp":"Dạy"}</td><td>${r.hours}h</td></tr>`; sum+=r.hours; }
+      else if(r){ tbody.innerHTML += `<tr><td>${j? "": d}</td><td>${p}</td><td class="text-center">${fmtHoursToHHMM(r.start)}</td><td class="text-center">${fmtHoursToHHMM(r.end)}</td><td>${r.dur.toFixed(1)}h</td></tr>`; sum+=r.dur; }
+      else { tbody.innerHTML += `<tr><td>${j? "": d}</td><td>${p}</td><td colspan=3 class="text-red-600">Không xác định</td></tr>`; }
+    });
+    if(parts.length>1) tbody.innerHTML += `<tr class="bg-indigo-50 font-medium"><td></td><td colspan=3>Tổng ngày</td><td>${sum.toFixed(1)}h</td></tr>`;
+    total += sum;
+  });
+  tbody.innerHTML += `<tr class="bg-indigo-100 font-bold"><td colspan=4>Tổng tuần</td><td>${total.toFixed(1)}h</td></tr>`;
+  c("result-container").classList.remove("hidden");
+  c("tribute").classList.toggle("hidden", !full);
+  showToast("Đã tính xong!");
+}
+
+/* ---------------- Excel parsing & flightData building (updated) ---------------- */
+
+/* combine helper for employee sheet */
+function combine(a,b){
+  const v1 = (a||"").toString().trim();
+  const v2 = (b||"").toString().trim();
+  let combined = [v1,v2].filter(Boolean).join(";");
+  if(!combined || combined.toUpperCase().includes("OFF")) combined = "";
+  return combined;
+}
+
+/* parseSheet unchanged (for employee-select) */
+function parseSheet(sheet, sheetName){
+  const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+  if(rows.length < 2) return [];
+  return rows.slice(1).map(row => ({
+    name: (row[1] || "").toString().trim(),
+    mon: combine(row[2], row[4]),
+    tue: combine(row[5], row[7]),
+    wed: combine(row[8], row[10]),
+    thu: combine(row[11], row[13]),
+    fri: combine(row[14], row[16]),
+    sat: combine(row[17], row[19]),
+    sun: combine(row[20], row[22]),
+    source: sheetName
+  })).filter(e => e.name);
+}
+
+/* Parse tokens like "HẢI 9", "HAI 9", "LÂM 3 KÈM QUẦY", "ANH 51 KO BRD" */
+function parseNameToken(token){
+  if(!token) return null;
+  let raw = token.toString().trim();
+  if(!raw) return null;
+  raw = raw.replace(/\s+/g,' ').trim();
+
+  // detect BRD/KO BRD patterns
+  const negativePattern = /\b(KO|K)\s*(BRD|BD)\b/i;
+  const positivePattern = /\b(BRD|BD)\b/i;
+  let tag = "";
+  if(negativePattern.test(raw)) tag = "NO";
+  else if(positivePattern.test(raw)) tag = "BRD";
+
+  // notes: kèm quầy
+  const notes = [];
+  if(/\bK[EÊ]M\s*QUẦY\b/i.test(raw)) notes.push("KÈM QUẦY");
+
+  // match name + number: allow unicode letters (including Đ)
+  const nameNumPattern = /([\p{L}Đđ]+(?:\s+[\p{L}Đđ]+)*)\s*(\d+)/u;
+  const m = raw.match(nameNumPattern);
+  if(m){
+    const namePart = m[1].trim();
+    const num = m[2].trim();
+    const combined = `${namePart} ${num}`.toUpperCase();
+    return { nameOnly: combined, tag, notes };
+  }
+
+  // fallback: last tokens
+  const words = raw.split(/\s+/);
+  const last = words[words.length-1];
+  if(/\d+/.test(last)){
+    const possible = words.slice(-2).join(' ').toUpperCase();
+    return { nameOnly: possible, tag, notes };
+  }
+
+  return { nameOnly: raw.toUpperCase(), tag, notes };
+}
+
+/* excel time helper */
+function excelTimeToHHMM(v){
+  if(v === undefined || v === null) return "";
+  if(typeof v === 'string') return v.trim();
+  if(typeof v === 'number'){
+    const frac = v - Math.floor(v);
+    const totalMinutes = Math.round(frac * 24 * 60);
+    const H = Math.floor(totalMinutes / 60);
+    const M = totalMinutes % 60;
+    return String(H).padStart(2,'0') + ':' + String(M).padStart(2,'0');
+  }
+  return String(v);
+}
+
+/* Parse MON..SUN sheet:
+   - rows 4..57
+   - columns S..AK tokens
+   - for each token split into individuals, set flags based on column letter (S/T/U/V)
+*/
+function parseFlightSheet(sheet, sheetName){
+  const out = [];
+  const startRow = 4, endRow = 57;
+  const startCol = XLSX.utils.decode_col('S');
+  const endCol = XLSX.utils.decode_col('AK');
+
+  for(let r = startRow; r <= endRow; r++){
+    const fltCell = sheet['M' + r];
+    const etdCell = sheet['N' + r];
+    const gateCell = sheet['G' + r];
+
+    const fltVal = fltCell ? (fltCell.v||'').toString().trim() : '';
+    const etdVal = excelTimeToHHMM(etdCell ? etdCell.v : '');
+    const gateVal = gateCell ? (gateCell.v||'').toString().trim() : '';
+
+    for(let c = startCol; c <= endCol; c++){
+      const colLetter = XLSX.utils.encode_col(c);
+      const addr = colLetter + r;
+      const cell = sheet[addr];
+      if(!cell || cell.v === undefined || cell.v === null) continue;
+      let raw = String(cell.v).trim();
+      if(!raw) continue;
+
+      // split by common separators
+      let parts = raw.split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
+
+      // if single long string, try to extract sequences of Name Number
+      if(parts.length === 1){
+        const found = raw.match(/[\p{L}Đđ]+(?:\s+[\p{L}Đđ]+)*\s*\d+/ug);
+        if(found && found.length>0){
+          parts = found.map(x=>x.trim());
+        } else {
+          // fallback split by 2+ spaces
+          const bySpaces = raw.split(/\s{2,}/).map(x=>x.trim()).filter(Boolean);
+          if(bySpaces.length>1) parts = bySpaces;
+        }
+      }
+
+      parts.forEach(part=>{
+        const parsed = parseNameToken(part);
+        if(!parsed) return;
+
+        const supFlag = (colLetter === 'S');
+        const gateFlag = (colLetter === 'T');
+        const ketsoFlag = (colLetter === 'U');
+        const wlctFlag = (colLetter === 'V');
+
+        const normalizedName = normalizeText(parsed.nameOnly);
+
+        out.push({
+          sheet: sheetName,
+          row: r,
+          col: colLetter,
+          tokenRaw: part,
+          nameOnly: parsed.nameOnly,            // original uppercase (may include diacritics)
+          nameNormalized: normalizedName,       // uppercase, no-diacritics for matching
+          tag: parsed.tag,                      // BRD|NO|""
+          notes: parsed.notes || [],            // extra notes
+          flt: fltVal,
+          etd: etdVal,
+          gate: gateVal,
+          supFlag,
+          gateFlag,
+          ketsoFlag,
+          wlctFlag
+        });
+      });
+    }
+  }
+  return out;
+}
+
+/* ---------------- File upload handling ---------------- */
+c("excel-upload").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    try {
+      const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+
+      // parse employee sheets
+      const targetSheets = ["bảng chấm công qt", "bảng chấm công nđ"];
+      let allEmployees = [];
+      targetSheets.forEach(target => {
+        const sheetName = workbook.SheetNames.find(n => n.trim().toLowerCase() === target);
+        if(sheetName){
+          const sheet = workbook.Sheets[sheetName];
+          const parsed = parseSheet(sheet, sheetName);
+          allEmployees = allEmployees.concat(parsed);
+        }
+      });
+      employeeData = allEmployees;
+      const sel = c("employee-select");
+      sel.innerHTML = '<option value="">-- Chọn nhân viên --</option>';
+      employeeData.sort((a,b)=> a.name.localeCompare(b.name,"vi",{sensitivity:"base"})).forEach(e=>{
+        const opt = document.createElement('option'); opt.value = e.name; opt.textContent = e.name + " (" + e.source.toUpperCase().replace("BẢNG CHẤM CÔNG ","") + ")"; sel.appendChild(opt);
+      });
+      showToast("Đã tải dữ liệu QT & NĐ (nếu có)");
+
+      // parse MON..SUN
+      flightData = [];
+      daysOrder.forEach(d => {
+        const sheetName = workbook.SheetNames.find(n => n.trim().toUpperCase() === d);
+        if(sheetName){
+          const sheet = workbook.Sheets[sheetName];
+          const parsed = parseFlightSheet(sheet, d);
+          flightData = flightData.concat(parsed);
+        }
+      });
+
+      // prepare auxiliary maps for suggestions (unique normalized names -> display name)
+      // Not stored globally, will compute on demand in renderSuggestions.
+      if(flightData.length) showToast("✅ Đã tải dữ liệu MON..SUN");
+      else showToast("⚠️ Không tìm thấy sheet MON..SUN (hoặc không có dữ liệu)");
+
+    } catch(err){
+      console.error(err);
+      showToast("❌ Lỗi đọc file Excel");
+    }
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+/* ---------------- employee-select behavior ---------------- */
+c("employee-select").addEventListener("change", (e) => {
+  const name = e.target.value;
+  if(!name) return;
+  const emp = employeeData.find(x => x.name.trim().toLowerCase() === name.trim().toLowerCase());
+  if(!emp) return showToast("Không tìm thấy nhân viên!");
+  ["mon","tue","wed","thu","fri","sat","sun"].forEach((d,i)=> c("day"+i).value = emp[d] || "");
+  showToast("Đã tải lịch của "+name);
+});
+
+/* ---------------- Search helpers & rendering (no-diacritics) ---------------- */
+
+/* Loose name match using normalized (no-diacritics) forms */
+function nameMatchesNormalized(searchNorm, tokenNorm){
+  if(!searchNorm || !tokenNorm) return false;
+  return tokenNorm.includes(searchNorm) || searchNorm.includes(tokenNorm);
+}
+
+/* Suggestion dropdown: show display names but match on normalized */
+function renderSuggestions(query){
+  const box = c("suggestions");
+  if(!box) return;
+  if(!query){ box.classList.add("hidden"); return; }
+  if(!flightData.length){ box.classList.add("hidden"); return; }
+
+  const qNorm = normalizeText(query);
+
+  // Build map: normalized -> first display name (preserve diacritics if present)
+  const map = new Map();
+  flightData.forEach(d => {
+    if(!d.nameNormalized) return;
+    if(!map.has(d.nameNormalized)) map.set(d.nameNormalized, d.nameOnly);
+  });
+
+  // find matches where normalized includes qNorm
+  const matches = [...map.entries()].filter(([norm, display]) => norm.includes(qNorm)).map(([norm,display])=>({norm,display}));
+
+  if(matches.length === 0){ box.classList.add("hidden"); return; }
+
+  // sort by display
+  matches.sort((a,b)=> a.display.localeCompare(b.display,"vi",{sensitivity:"base"}));
+
+  box.innerHTML = matches.map(m => `<div class="px-3 py-2 hover:bg-indigo-50 cursor-pointer" data-n="${m.norm}">${m.display}</div>`).join("");
+  box.classList.remove("hidden");
+  box.querySelectorAll("div").forEach(div => {
+    div.onclick = () => { 
+      const display = div.textContent;
+      c("search-name").value = display;
+      box.classList.add("hidden");
+      renderFlightResults(display);
+    };
+  });
+}
+
+/* Render results table using normalized matching (search can be provided with or without diacritics) */
+function renderFlightResults(nameRaw){
+  const container = c("flight-result");
+  if(!container) return;
+  if(!flightData.length){ container.innerHTML = `<p class="text-center text-gray-500 italic">Chưa có dữ liệu MON..SUN. Hãy tải file Excel.</p>`; return; }
+
+  const qNorm = normalizeText(nameRaw);
+  // find records whose nameNormalized loosely matches qNorm
+  const matches = flightData.filter(d => nameMatchesNormalized(qNorm, d.nameNormalized));
+  if(!matches.length){ container.innerHTML = `<p class="text-center text-gray-500 italic">Không tìm thấy dữ liệu cho "${nameRaw}"</p>`; return; }
+
+  // group by sheet/day preserving order MON..SUN
+  const grouped = {};
+  daysOrder.forEach(d => grouped[d] = []);
+  matches.forEach(m => grouped[m.sheet] = (grouped[m.sheet]||[]).concat(m));
+
+  let html = `<div class="overflow-x-auto"><table class="w-full result-table"><thead><tr class="bg-indigo-100"><th>Ngày</th><th>FLT</th><th>ETD</th><th>GATE</th><th>SUP</th><th>GATE (flag)</th><th>Kết sổ</th><th>WLC/XTAY</th><th>Boarding</th></tr></thead><tbody>`;
+
+  for(const day of daysOrder){
+    const rows = grouped[day] || [];
+    if(rows.length === 0){
+      html += `<tr class="text-gray-400"><td>${day}</td><td colspan="8">Không có dữ liệu</td></tr>`;
+      continue;
+    }
+    rows.forEach(r => {
+      // Boarding text
+      let boardingText = '';
+      let rowClass = '';
+      if(r.tag === "BRD"){
+        boardingText = '✅ Có';
+        if(r.notes && r.notes.includes("KÈM QUẦY")) boardingText += ' (Kèm quầy)';
+        rowClass = 'board-yes';
+      } else if(r.tag === "NO"){
+        boardingText = '❌ Không';
+        if(r.notes && r.notes.includes("KÈM QUẦY")) boardingText += ' (Kèm quầy)';
+        rowClass = 'board-no';
+      } else {
+        boardingText = '';
+      }
+
+      html += `<tr class="${rowClass}">
+        <td>${day}</td>
+        <td>${r.flt || '—'}</td>
+        <td>${r.etd || '—'}</td>
+        <td>${r.gate || ''}</td>
+        <td class="center">${ r.supFlag ? '✅' : '' }</td>
+        <td class="center">${ r.gateFlag ? '✅' : '' }</td>
+        <td class="center">${ r.ketsoFlag ? '✅' : '' }</td>
+        <td class="center">${ r.wlctFlag ? '✅' : '' }</td>
+        <td class="center">${boardingText}</td>
+      </tr>`;
+    });
+  }
+
+  html += `</tbody></table></div>`;
+  container.innerHTML = html;
+}
+
+/* Wire search input events */
+c("search-name").addEventListener("input", e => renderSuggestions(e.target.value || ""));
+c("search-name").addEventListener("keydown", e => {
+  if(e.key === "Enter"){ e.preventDefault(); const q = c("search-name").value.trim(); if(q) renderFlightResults(q); }
+});
+
+/* ---------------- Init & wiring ---------------- */
+document.addEventListener("DOMContentLoaded", () => {
+  createInputs();
+  fillWeekSelect();
+
+  const btnSave = c("save-week"); if(btnSave) btnSave.onclick = saveWeek;
+  const selWeek = c("week-select"); if(selWeek) selWeek.onchange = e => { const v = e.target.value; if(v){ c("week-name").value = v; loadWeek(v); } };
+  const btnCalc = c("calc-week"); if(btnCalc) btnCalc.onclick = calcWeek;
+  const btnClear = c("clear-week"); if(btnClear) btnClear.onclick = deleteWeek;
+  const btnClearAll = c("clear-all"); if(btnClearAll) btnClearAll.onclick = clearAll;
+});
+
+</script>
+
