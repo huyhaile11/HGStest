@@ -5,11 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>LỊCH CỐNG HIẾN HGS - Full</title>
 
-  <!-- Tailwind + font -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
-  <!-- XLSX (đọc file Excel) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
@@ -39,7 +37,6 @@
       <p class="text-sm text-gray-500 mt-1">Nhập ca như: S; X; A; HC; 1X; 1-X; X1; X-1; 0.5X-1...</p>
     </div>
 
-    <!-- Tuần + Excel -->
     <div class="space-y-2">
       <input id="week-name" type="text" placeholder="Tên tuần (VD: Tuần 44 - Tháng 10)"
              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400">
@@ -60,17 +57,14 @@
       </div>
     </div>
 
-    <!-- Nhập ca -->
     <div id="days-container" class="space-y-3"></div>
 
-    <!-- Nút hành động -->
     <div class="grid grid-cols-1 gap-2">
       <button id="calc-week" class="w-full bg-indigo-600 text-white rounded-lg py-3 font-semibold">📅 Tính lịch tuần</button>
       <button id="clear-week" class="w-full bg-yellow-500 text-white rounded-lg py-3 font-semibold">🧹 Xóa tuần này</button>
       <button id="clear-all" class="w-full bg-red-500 text-white rounded-lg py-3 font-semibold">🗑 Xóa tất cả</button>
     </div>
 
-    <!-- Kết quả lịch tuần -->
     <div id="result-container" class="hidden">
       <div class="overflow-x-auto mt-3 rounded-lg border border-gray-200">
         <table class="w-full text-sm text-gray-700">
@@ -88,11 +82,9 @@
       </div>
       <p id="tribute" class="text-center font-bold text-red-600 mt-2 hidden">BẠN ĐÃ CỐNG HIẾN HẾT MÌNH CẢ TUẦN!</p>
 
-      <!-- Created by -->
       <p class="text-center mt-3 font-semibold text-indigo-600 text-sm bg-indigo-50 py-2 rounded-lg shadow-sm">✨ Created by Hải 9 ✨</p>
     </div>
 
-    <!-- Tra cứu chuyến bay -->
     <div class="border-t pt-4 mt-4">
       <h2 class="text-lg font-semibold text-indigo-600 text-center mb-2">🔍 Tra cứu chuyến bay</h2>
       <div class="space-y-2">
@@ -125,7 +117,7 @@
 </script>
 
 <script>
-/* ================= PART 2/2: JAVASCRIPT HOÀN CHỈNH ================= */
+/* ================= PART 2/2: JAVASCRIPT HOÀN CHỈNH - Đã Sửa Đổi ================= */
 
 /* ---------------- Helpers & state ---------------- */
 const c = id => document.getElementById(id);
@@ -247,7 +239,7 @@ function calcWeek(){
       const r = parseShift(p);
       if(r && r.error){ tbody.innerHTML += `<tr><td>${j? "": d}</td><td>${p}</td><td colspan=3 class="text-red-600">${r.error}</td></tr>`; return; }
       if(r && r.special){ tbody.innerHTML += `<tr><td>${j? "": d}</td><td>${p}</td><td colspan=2 class="text-center">${r.special=="H"?"Học":r.special=="M"?"Họp":"Dạy"}</td><td>${r.hours}h</td></tr>`; sum+=r.hours; }
-      else if(r){ tbody.innerHTML += `<tr><td>${j? "": d}</td><td>${p}</td><td class="text-center">${fmtHoursToHHMM(r.start)}</td><td class="text-center">${fmtHoursToHHMM(r.end)}</td><td>${r.dur.toFixed(1)}h</td></tr>`; sum+=r.dur; }
+      else if(r){ tbody.innerHTML += `<tr><td>${j? "": d}</td><td>${p}</td><td class="text-center">${fmtHoursToHHMM(r.start)}</td><td class="text-center">${fmtHoursToHHMM(r.end)}</td><td>${r.dur.toFixed(1)}h</td></td></tr>`; sum+=r.dur; }
       else { tbody.innerHTML += `<tr><td>${j? "": d}</td><td>${p}</td><td colspan=3 class="text-red-600">Không xác định</td></tr>`; }
     });
     if(parts.length>1) tbody.innerHTML += `<tr class="bg-indigo-50 font-medium"><td></td><td colspan=3>Tổng ngày</td><td>${sum.toFixed(1)}h</td></tr>`;
@@ -259,9 +251,9 @@ function calcWeek(){
   showToast("Đã tính xong!");
 }
 
-/* ---------------- Excel parsing & flightData building (updated) ---------------- */
+/* ---------------- Excel parsing & flightData building (UPDATED) ---------------- */
 
-/* combine helper for employee sheet */
+/* combine helper for employee sheet (kept) */
 function combine(a,b){
   const v1 = (a||"").toString().trim();
   const v2 = (b||"").toString().trim();
@@ -270,7 +262,7 @@ function combine(a,b){
   return combined;
 }
 
-/* parseSheet unchanged (for employee-select) */
+/* parseSheet unchanged (for employee-select) (kept) */
 function parseSheet(sheet, sheetName){
   const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
   if(rows.length < 2) return [];
@@ -287,7 +279,7 @@ function parseSheet(sheet, sheetName){
   })).filter(e => e.name);
 }
 
-/* Parse tokens like "HẢI 9", "HAI 9", "LÂM 3 KÈM QUẦY", "ANH 51 KO BRD" */
+/* Parse tokens like "HẢI 9", "HAI 9", "LÂM 3 KÈM QUẦY", "ANH 51 KO BRD" (kept) */
 function parseNameToken(token){
   if(!token) return null;
   let raw = token.toString().trim();
@@ -326,7 +318,7 @@ function parseNameToken(token){
   return { nameOnly: raw.toUpperCase(), tag, notes };
 }
 
-/* excel time helper */
+/* excel time helper (kept) */
 function excelTimeToHHMM(v){
   if(v === undefined || v === null) return "";
   if(typeof v === 'string') return v.trim();
@@ -340,25 +332,25 @@ function excelTimeToHHMM(v){
   return String(v);
 }
 
-/* Parse MON..SUN sheet:
-   - rows 4..57
-   - columns S..AK tokens
-   - for each token split into individuals, set flags based on column letter (S/T/U/V)
-*/
+/* Parse MON..SUN sheet: UPDATED COLUMNS and ROWS */
 function parseFlightSheet(sheet, sheetName){
   const out = [];
-  const startRow = 4, endRow = 57;
-  const startCol = XLSX.utils.decode_col('S');
-  const endCol = XLSX.utils.decode_col('AK');
-
+  const startRow = 4, endRow = 58; // Dòng 4 đến 58
+  const startCol = XLSX.utils.decode_col('V'); // Cột V
+  const endCol = XLSX.utils.decode_col('AL'); // Cột AL
+  
   for(let r = startRow; r <= endRow; r++){
-    const fltCell = sheet['M' + r];
-    const etdCell = sheet['N' + r];
-    const gateCell = sheet['G' + r];
+    // Cập nhật vị trí cột FLT, ETD, GATE
+    const fltCell = sheet['Q' + r]; // Q
+    const etdCell = sheet['R' + r]; // R
+    const gateCell = sheet['G' + r]; // G (Giữ nguyên)
 
     const fltVal = fltCell ? (fltCell.v||'').toString().trim() : '';
     const etdVal = excelTimeToHHMM(etdCell ? etdCell.v : '');
     const gateVal = gateCell ? (gateCell.v||'').toString().trim() : '';
+    
+    // Nếu không có chuyến bay, bỏ qua hàng này
+    if(!fltVal) continue;
 
     for(let c = startCol; c <= endCol; c++){
       const colLetter = XLSX.utils.encode_col(c);
@@ -368,10 +360,10 @@ function parseFlightSheet(sheet, sheetName){
       let raw = String(cell.v).trim();
       if(!raw) continue;
 
-      // split by common separators
+      // split by common separators (kept)
       let parts = raw.split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
 
-      // if single long string, try to extract sequences of Name Number
+      // if single long string, try to extract sequences of Name Number (kept)
       if(parts.length === 1){
         const found = raw.match(/[\p{L}Đđ]+(?:\s+[\p{L}Đđ]+)*\s*\d+/ug);
         if(found && found.length>0){
@@ -383,14 +375,15 @@ function parseFlightSheet(sheet, sheetName){
         }
       }
 
+      // Determine the flags for the current column
+      const isSup = colLetter === 'V';
+      const isGate = colLetter === 'W';
+      const isKetso = colLetter === 'X';
+      const isWlct = colLetter === 'Y';
+      
       parts.forEach(part=>{
         const parsed = parseNameToken(part);
         if(!parsed) return;
-
-        const supFlag = (colLetter === 'S');
-        const gateFlag = (colLetter === 'T');
-        const ketsoFlag = (colLetter === 'U');
-        const wlctFlag = (colLetter === 'V');
 
         const normalizedName = normalizeText(parsed.nameOnly);
 
@@ -399,17 +392,19 @@ function parseFlightSheet(sheet, sheetName){
           row: r,
           col: colLetter,
           tokenRaw: part,
-          nameOnly: parsed.nameOnly,            // original uppercase (may include diacritics)
-          nameNormalized: normalizedName,       // uppercase, no-diacritics for matching
-          tag: parsed.tag,                      // BRD|NO|""
-          notes: parsed.notes || [],            // extra notes
+          nameOnly: parsed.nameOnly,
+          nameNormalized: normalizedName,
+          tag: parsed.tag,
+          notes: parsed.notes || [],
           flt: fltVal,
           etd: etdVal,
           gate: gateVal,
-          supFlag,
-          gateFlag,
-          ketsoFlag,
-          wlctFlag
+          supFlag: isSup,
+          gateFlag: isGate,
+          ketsoFlag: isKetso,
+          wlctFlag: isWlct,
+          // Thêm một trường để dễ dàng lọc trùng:
+          uniqueKey: `${sheetName}-${fltVal}-${etdVal}-${gateVal}-${normalizedName}-${colLetter}`
         });
       });
     }
@@ -417,7 +412,7 @@ function parseFlightSheet(sheet, sheetName){
   return out;
 }
 
-/* ---------------- File upload handling ---------------- */
+/* ---------------- File upload handling (kept) ---------------- */
 c("excel-upload").addEventListener("change", (e) => {
   const file = e.target.files[0];
   if(!file) return;
@@ -470,7 +465,7 @@ c("excel-upload").addEventListener("change", (e) => {
   reader.readAsArrayBuffer(file);
 });
 
-/* ---------------- employee-select behavior ---------------- */
+/* ---------------- employee-select behavior (kept) ---------------- */
 c("employee-select").addEventListener("change", (e) => {
   const name = e.target.value;
   if(!name) return;
@@ -480,15 +475,15 @@ c("employee-select").addEventListener("change", (e) => {
   showToast("Đã tải lịch của "+name);
 });
 
-/* ---------------- Search helpers & rendering (no-diacritics) ---------------- */
+/* ---------------- Search helpers & rendering (UPDATED DE-DUPE LOGIC) ---------------- */
 
-/* Loose name match using normalized (no-diacritics) forms */
+/* Loose name match using normalized (no-diacritics) forms (kept) */
 function nameMatchesNormalized(searchNorm, tokenNorm){
   if(!searchNorm || !tokenNorm) return false;
   return tokenNorm.includes(searchNorm) || searchNorm.includes(tokenNorm);
 }
 
-/* Suggestion dropdown: show display names but match on normalized */
+/* Suggestion dropdown: show display names but match on normalized (kept) */
 function renderSuggestions(query){
   const box = c("suggestions");
   if(!box) return;
@@ -532,9 +527,38 @@ function renderFlightResults(nameRaw){
 
   const qNorm = normalizeText(nameRaw);
   // find records whose nameNormalized loosely matches qNorm
-  const matches = flightData.filter(d => nameMatchesNormalized(qNorm, d.nameNormalized));
+  let matches = flightData.filter(d => nameMatchesNormalized(qNorm, d.nameNormalized));
+  
   if(!matches.length){ container.innerHTML = `<p class="text-center text-gray-500 italic">Không tìm thấy dữ liệu cho "${nameRaw}"</p>`; return; }
 
+  // LOGIC DE-DUPLICATION: Chỉ giữ lại một bản ghi (record) cho mỗi bộ (Day, Flt, ETD, Gate, NormalizedName)
+  const uniqueMatchesMap = new Map();
+  matches.forEach(m => {
+    // Tạo khóa độc nhất (Unique Key) cho mỗi chuyến bay/ngày/nhân viên
+    // (Bỏ cột khỏi key để gộp các vai trò V, W, X, Y vào cùng 1 dòng)
+    const flightKey = `${m.sheet}-${m.flt}-${m.etd}-${m.gate}-${m.nameNormalized}`; 
+    
+    if (uniqueMatchesMap.has(flightKey)) {
+      // Nếu đã tồn tại, cập nhật cờ (flag) cho record hiện tại
+      const existing = uniqueMatchesMap.get(flightKey);
+      existing.supFlag = existing.supFlag || m.supFlag;
+      existing.gateFlag = existing.gateFlag || m.gateFlag;
+      existing.ketsoFlag = existing.ketsoFlag || m.ketsoFlag;
+      existing.wlctFlag = existing.wlctFlag || m.wlctFlag;
+      // Cập nhật tag Boarding (chỉ ưu tiên BRD/NO nếu được chỉ định)
+      if (m.tag === "BRD") existing.tag = "BRD";
+      else if (m.tag === "NO" && existing.tag !== "BRD") existing.tag = "NO";
+      // Gộp notes nếu cần
+      m.notes.forEach(note => { if (!existing.notes.includes(note)) existing.notes.push(note); });
+    } else {
+      // Nếu chưa tồn tại, thêm vào map
+      uniqueMatchesMap.set(flightKey, m);
+    }
+  });
+
+  // Chuyển lại thành mảng
+  matches = Array.from(uniqueMatchesMap.values());
+  
   // group by sheet/day preserving order MON..SUN
   const grouped = {};
   daysOrder.forEach(d => grouped[d] = []);
@@ -582,13 +606,13 @@ function renderFlightResults(nameRaw){
   container.innerHTML = html;
 }
 
-/* Wire search input events */
+/* Wire search input events (kept) */
 c("search-name").addEventListener("input", e => renderSuggestions(e.target.value || ""));
 c("search-name").addEventListener("keydown", e => {
   if(e.key === "Enter"){ e.preventDefault(); const q = c("search-name").value.trim(); if(q) renderFlightResults(q); }
 });
 
-/* ---------------- Init & wiring ---------------- */
+/* ---------------- Init & wiring (kept) ---------------- */
 document.addEventListener("DOMContentLoaded", () => {
   createInputs();
   fillWeekSelect();
@@ -602,3 +626,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </script>
 
+
+</body>
+</html>
