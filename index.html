@@ -33,7 +33,7 @@
 <body class="p-3">
   <div class="max-w-lg mx-auto card p-4 space-y-4">
     <div class="text-center">
-      <h1 class="text-xl font-bold text-indigo-600">📅 LỊCH CỐNG HIẾN HGS</h1>
+      <h1 class="text-xl font-bold text-indigo-600">📅 LỊCH "CỐNG HIẾN" HGS</h1>
       <p class="text-sm text-gray-500 mt-1">Nhập ca như: S; X; A; HC; 1X; 1-X; X1; X-1; 0.5X-1...</p>
     </div>
 
@@ -50,6 +50,9 @@
       <div class="space-y-2">
         <input type="file" id="excel-upload" accept=".xls,.xlsx"
                class="w-full border border-gray-300 rounded-lg text-sm px-3 py-2">
+        <p class="text-xs text-gray-500 mt-1">
+          (Để xem lịch và chuyến bay của tất cả mọi người, trước hết hãy **tải file Excel và up lên web**, cách tải file tại <a href="https://www.thegioididong.com/tin-tuc/cach-tai-file-google-sheets-ve-dien-thoai-1417179?gidzl=mAN1Vd59w0hFkybzS5Jf3CYno7XlMxi1Wx6VS6jQjb7GjiDoO5ct2z-yddjlLBO8XR34AJE9t110U43X1m" target="_blank" class="text-indigo-600 hover:text-indigo-800 font-medium">đây</a>)
+        </p>
         <select id="employee-select"
                 class="w-full border border-gray-300 rounded-lg text-sm px-3 py-2">
           <option value="">-- Chọn nhân viên --</option>
@@ -81,12 +84,13 @@
         </table>
       </div>
       <p id="tribute" class="text-center font-bold text-red-600 mt-2 hidden">BẠN ĐÃ CỐNG HIẾN HẾT MÌNH CẢ TUẦN!</p>
-
-      <p class="text-center mt-3 font-semibold text-indigo-600 text-sm bg-indigo-50 py-2 rounded-lg shadow-sm">✨ Created by Hải 9 ✨</p>
     </div>
 
+    <p class="text-center mt-3 font-semibold text-indigo-600 text-sm bg-indigo-50 py-2 rounded-lg shadow-sm">✨ Created by Hải 9 ✨</p>
+    
     <div class="border-t pt-4 mt-4">
       <h2 class="text-lg font-semibold text-indigo-600 text-center mb-2">🔍 Tra cứu chuyến bay</h2>
+      <p class="text-xs text-center text-red-500 mb-2 italic">"Link này chỉ có mục đích tham khảo, File cán bộ gửi vẫn luôn là chuẩn nhất"</p>
       <div class="space-y-2">
         <input id="search-name" type="text" placeholder="Nhập tên nhân viên (VD: HẢI 9 hoặc Hai 9)"
                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-indigo-400"
@@ -123,6 +127,8 @@
 const c = id => document.getElementById(id);
 const days = ["Thứ Hai","Thứ Ba","Thứ Tư","Thứ Năm","Thứ Sáu","Thứ Bảy","Chủ Nhật"];
 const daysOrder = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
+const EXCEL_STORAGE_KEY = 'hgs_last_excel_data';
+const SEARCH_STORAGE_KEY = 'hgs_last_search_name';
 
 let employeeData = []; // from bảng chấm công QT / NĐ
 let flightData = [];   // parsed tokens from MON..SUN
@@ -135,9 +141,7 @@ const showToast = msg => {
 /* Remove diacritics and normalize string for matching (returns uppercase no-diacritics) */
 function removeDiacritics(str){
   if(!str) return "";
-  // Normalize and remove combining diacritical marks
   const s = str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  // Replace Đ/đ with D/d
   return s.replace(/đ/g,'d').replace(/Đ/g,'D');
 }
 function normalizeText(s){
@@ -398,7 +402,7 @@ function parseFlightSheet(sheet, sheetName){
           notes: parsed.notes || [],
           flt: fltVal,
           etd: etdVal,
-          gate: gateVal,
+          gate: gateVal, // giữ lại giá trị này, mặc dù không hiển thị ra bảng
           supFlag: isSup,
           gateFlag: isGate,
           ketsoFlag: isKetso,
@@ -412,57 +416,95 @@ function parseFlightSheet(sheet, sheetName){
   return out;
 }
 
-/* ---------------- File upload handling (kept) ---------------- */
+/* ---------------- Excel processing logic ---------------- */
+
+function processExcelData(data) {
+    const workbook = XLSX.read(data, { type: "array" });
+
+    // 1. Parse employee sheets
+    const targetSheets = ["bảng chấm công qt", "bảng chấm công nđ"];
+    let allEmployees = [];
+    targetSheets.forEach(target => {
+        const sheetName = workbook.SheetNames.find(n => n.trim().toLowerCase() === target);
+        if (sheetName) {
+            const sheet = workbook.Sheets[sheetName];
+            const parsed = parseSheet(sheet, sheetName);
+            allEmployees = allEmployees.concat(parsed);
+        }
+    });
+    employeeData = allEmployees;
+    const sel = c("employee-select");
+    sel.innerHTML = '<option value="">-- Chọn nhân viên --</option>';
+    employeeData.sort((a,b)=> a.name.localeCompare(b.name,"vi",{sensitivity:"base"})).forEach(e=>{
+        const opt = document.createElement('option'); opt.value = e.name; opt.textContent = e.name + " (" + e.source.toUpperCase().replace("BẢNG CHẤM CÔNG ","") + ")"; sel.appendChild(opt);
+    });
+
+    // 2. Parse MON..SUN
+    flightData = [];
+    daysOrder.forEach(d => {
+        const sheetName = workbook.SheetNames.find(n => n.trim().toUpperCase() === d);
+        if (sheetName) {
+            const sheet = workbook.Sheets[sheetName];
+            const parsed = parseFlightSheet(sheet, d);
+            flightData = flightData.concat(parsed);
+        }
+    });
+
+    return true; // success
+}
+
+
+function loadExcelFile(file) {
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+        try {
+            const data = new Uint8Array(evt.target.result);
+            
+            // Chuyển Uint8Array sang Base64 để lưu vào Local Storage
+            const binary = data.reduce((acc, i) => acc + String.fromCharCode(i), '');
+            const base64 = btoa(binary);
+            localStorage.setItem(EXCEL_STORAGE_KEY, base64);
+            
+            if (processExcelData(data)) {
+                showToast("✅ Đã tải file Excel và lưu vào bộ nhớ trình duyệt");
+            } else {
+                showToast("⚠️ Không tìm thấy sheet Bảng chấm công hoặc MON..SUN");
+            }
+        } catch(err){
+            console.error(err);
+            showToast("❌ Lỗi đọc file Excel");
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function loadLastExcelData() {
+    const base64 = localStorage.getItem(EXCEL_STORAGE_KEY);
+    if (base64) {
+        try {
+            // Chuyển Base64 về Uint8Array
+            const binary = atob(base64);
+            const array = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                array[i] = binary.charCodeAt(i);
+            }
+            if (processExcelData(array)) {
+                showToast("Đã tải dữ liệu Excel từ bộ nhớ trình duyệt");
+                return true;
+            }
+        } catch(e) {
+            console.error("Lỗi khôi phục dữ liệu Excel:", e);
+            localStorage.removeItem(EXCEL_STORAGE_KEY);
+        }
+    }
+    return false;
+}
+
+/* ---------------- File upload handling (UPDATED) ---------------- */
 c("excel-upload").addEventListener("change", (e) => {
   const file = e.target.files[0];
   if(!file) return;
-  const reader = new FileReader();
-  reader.onload = (evt) => {
-    try {
-      const data = new Uint8Array(evt.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
-
-      // parse employee sheets
-      const targetSheets = ["bảng chấm công qt", "bảng chấm công nđ"];
-      let allEmployees = [];
-      targetSheets.forEach(target => {
-        const sheetName = workbook.SheetNames.find(n => n.trim().toLowerCase() === target);
-        if(sheetName){
-          const sheet = workbook.Sheets[sheetName];
-          const parsed = parseSheet(sheet, sheetName);
-          allEmployees = allEmployees.concat(parsed);
-        }
-      });
-      employeeData = allEmployees;
-      const sel = c("employee-select");
-      sel.innerHTML = '<option value="">-- Chọn nhân viên --</option>';
-      employeeData.sort((a,b)=> a.name.localeCompare(b.name,"vi",{sensitivity:"base"})).forEach(e=>{
-        const opt = document.createElement('option'); opt.value = e.name; opt.textContent = e.name + " (" + e.source.toUpperCase().replace("BẢNG CHẤM CÔNG ","") + ")"; sel.appendChild(opt);
-      });
-      showToast("Đã tải dữ liệu QT & NĐ (nếu có)");
-
-      // parse MON..SUN
-      flightData = [];
-      daysOrder.forEach(d => {
-        const sheetName = workbook.SheetNames.find(n => n.trim().toUpperCase() === d);
-        if(sheetName){
-          const sheet = workbook.Sheets[sheetName];
-          const parsed = parseFlightSheet(sheet, d);
-          flightData = flightData.concat(parsed);
-        }
-      });
-
-      // prepare auxiliary maps for suggestions (unique normalized names -> display name)
-      // Not stored globally, will compute on demand in renderSuggestions.
-      if(flightData.length) showToast("✅ Đã tải dữ liệu MON..SUN");
-      else showToast("⚠️ Không tìm thấy sheet MON..SUN (hoặc không có dữ liệu)");
-
-    } catch(err){
-      console.error(err);
-      showToast("❌ Lỗi đọc file Excel");
-    }
-  };
-  reader.readAsArrayBuffer(file);
+  loadExcelFile(file);
 });
 
 /* ---------------- employee-select behavior (kept) ---------------- */
@@ -475,7 +517,7 @@ c("employee-select").addEventListener("change", (e) => {
   showToast("Đã tải lịch của "+name);
 });
 
-/* ---------------- Search helpers & rendering (UPDATED DE-DUPE LOGIC) ---------------- */
+/* ---------------- Search helpers & rendering (UPDATED to save search state) ---------------- */
 
 /* Loose name match using normalized (no-diacritics) forms (kept) */
 function nameMatchesNormalized(searchNorm, tokenNorm){
@@ -492,19 +534,16 @@ function renderSuggestions(query){
 
   const qNorm = normalizeText(query);
 
-  // Build map: normalized -> first display name (preserve diacritics if present)
   const map = new Map();
   flightData.forEach(d => {
     if(!d.nameNormalized) return;
     if(!map.has(d.nameNormalized)) map.set(d.nameNormalized, d.nameOnly);
   });
 
-  // find matches where normalized includes qNorm
   const matches = [...map.entries()].filter(([norm, display]) => norm.includes(qNorm)).map(([norm,display])=>({norm,display}));
 
   if(matches.length === 0){ box.classList.add("hidden"); return; }
 
-  // sort by display
   matches.sort((a,b)=> a.display.localeCompare(b.display,"vi",{sensitivity:"base"}));
 
   box.innerHTML = matches.map(m => `<div class="px-3 py-2 hover:bg-indigo-50 cursor-pointer" data-n="${m.norm}">${m.display}</div>`).join("");
@@ -519,61 +558,56 @@ function renderSuggestions(query){
   });
 }
 
-/* Render results table using normalized matching (search can be provided with or without diacritics) */
+/* Render results table (Updated to save search state) */
 function renderFlightResults(nameRaw){
   const container = c("flight-result");
   if(!container) return;
+  
+  // Lưu tên nhân viên vừa tra cứu
+  localStorage.setItem(SEARCH_STORAGE_KEY, nameRaw);
+  
   if(!flightData.length){ container.innerHTML = `<p class="text-center text-gray-500 italic">Chưa có dữ liệu MON..SUN. Hãy tải file Excel.</p>`; return; }
 
   const qNorm = normalizeText(nameRaw);
-  // find records whose nameNormalized loosely matches qNorm
   let matches = flightData.filter(d => nameMatchesNormalized(qNorm, d.nameNormalized));
   
   if(!matches.length){ container.innerHTML = `<p class="text-center text-gray-500 italic">Không tìm thấy dữ liệu cho "${nameRaw}"</p>`; return; }
 
-  // LOGIC DE-DUPLICATION: Chỉ giữ lại một bản ghi (record) cho mỗi bộ (Day, Flt, ETD, Gate, NormalizedName)
+  // LOGIC DE-DUPLICATION (Giữ nguyên logic gộp vai trò)
   const uniqueMatchesMap = new Map();
   matches.forEach(m => {
-    // Tạo khóa độc nhất (Unique Key) cho mỗi chuyến bay/ngày/nhân viên
-    // (Bỏ cột khỏi key để gộp các vai trò V, W, X, Y vào cùng 1 dòng)
     const flightKey = `${m.sheet}-${m.flt}-${m.etd}-${m.gate}-${m.nameNormalized}`; 
     
     if (uniqueMatchesMap.has(flightKey)) {
-      // Nếu đã tồn tại, cập nhật cờ (flag) cho record hiện tại
       const existing = uniqueMatchesMap.get(flightKey);
       existing.supFlag = existing.supFlag || m.supFlag;
       existing.gateFlag = existing.gateFlag || m.gateFlag;
       existing.ketsoFlag = existing.ketsoFlag || m.ketsoFlag;
       existing.wlctFlag = existing.wlctFlag || m.wlctFlag;
-      // Cập nhật tag Boarding (chỉ ưu tiên BRD/NO nếu được chỉ định)
       if (m.tag === "BRD") existing.tag = "BRD";
       else if (m.tag === "NO" && existing.tag !== "BRD") existing.tag = "NO";
-      // Gộp notes nếu cần
       m.notes.forEach(note => { if (!existing.notes.includes(note)) existing.notes.push(note); });
     } else {
-      // Nếu chưa tồn tại, thêm vào map
       uniqueMatchesMap.set(flightKey, m);
     }
   });
 
-  // Chuyển lại thành mảng
   matches = Array.from(uniqueMatchesMap.values());
   
-  // group by sheet/day preserving order MON..SUN
   const grouped = {};
   daysOrder.forEach(d => grouped[d] = []);
   matches.forEach(m => grouped[m.sheet] = (grouped[m.sheet]||[]).concat(m));
 
-  let html = `<div class="overflow-x-auto"><table class="w-full result-table"><thead><tr class="bg-indigo-100"><th>Ngày</th><th>FLT</th><th>ETD</th><th>GATE</th><th>SUP</th><th>GATE (flag)</th><th>Kết sổ</th><th>WLC/XTAY</th><th>Boarding</th></tr></thead><tbody>`;
+  // Cập nhật HEADER: Bỏ cột GATE, đổi GATE (flag) thành GATE
+  let html = `<div class="overflow-x-auto"><table class="w-full result-table"><thead><tr class="bg-indigo-100"><th>Ngày</th><th>FLT</th><th>ETD</th><th>SUP</th><th>GATE</th><th>Kết sổ</th><th>WLC/XTAY</th><th>Boarding</th></tr></thead><tbody>`;
 
   for(const day of daysOrder){
     const rows = grouped[day] || [];
     if(rows.length === 0){
-      html += `<tr class="text-gray-400"><td>${day}</td><td colspan="8">Không có dữ liệu</td></tr>`;
+      html += `<tr class="text-gray-400"><td>${day}</td><td colspan="7">Không có dữ liệu</td></tr>`; // colspan giảm từ 8 xuống 7
       continue;
     }
     rows.forEach(r => {
-      // Boarding text
       let boardingText = '';
       let rowClass = '';
       if(r.tag === "BRD"){
@@ -588,11 +622,11 @@ function renderFlightResults(nameRaw){
         boardingText = '';
       }
 
+      // Cập nhật CONTENT: Bỏ cột GATE (r.gate), giữ lại GATE (r.gateFlag)
       html += `<tr class="${rowClass}">
         <td>${day}</td>
         <td>${r.flt || '—'}</td>
         <td>${r.etd || '—'}</td>
-        <td>${r.gate || ''}</td>
         <td class="center">${ r.supFlag ? '✅' : '' }</td>
         <td class="center">${ r.gateFlag ? '✅' : '' }</td>
         <td class="center">${ r.ketsoFlag ? '✅' : '' }</td>
@@ -612,10 +646,21 @@ c("search-name").addEventListener("keydown", e => {
   if(e.key === "Enter"){ e.preventDefault(); const q = c("search-name").value.trim(); if(q) renderFlightResults(q); }
 });
 
-/* ---------------- Init & wiring (kept) ---------------- */
+/* ---------------- Init & wiring (UPDATED to load saved data) ---------------- */
 document.addEventListener("DOMContentLoaded", () => {
   createInputs();
   fillWeekSelect();
+  
+  // 1. Tải file Excel gần nhất
+  loadLastExcelData();
+
+  // 2. Tải và hiển thị kết quả tìm kiếm gần nhất
+  const lastSearchName = localStorage.getItem(SEARCH_STORAGE_KEY);
+  if (lastSearchName) {
+      c("search-name").value = lastSearchName;
+      // Trì hoãn việc render để đảm bảo dữ liệu excel (nếu có) đã được load
+      setTimeout(() => renderFlightResults(lastSearchName), 500); 
+  }
 
   const btnSave = c("save-week"); if(btnSave) btnSave.onclick = saveWeek;
   const selWeek = c("week-select"); if(selWeek) selWeek.onchange = e => { const v = e.target.value; if(v){ c("week-name").value = v; loadWeek(v); } };
