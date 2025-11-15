@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>LỊCH CỐNG HIẾN HGS - Xanh nhạt (Fix THƯƠNG 4)</title>
+  <title>LỊCH CỐNG HIẾN HGS - Xanh nhạt (Fix THƯƠNG 4 & tìm tên chính xác)</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -533,7 +533,42 @@ c("employee-select").addEventListener("change",e=>{
   if(!emp) return showToast("Không tìm thấy!");
   ["mon","tue","wed","thu","fri","sat","sun"].forEach((d,i)=>c("day"+i).value=emp[d]||"");
   showToast("Đã tải lịch của "+name);
+
+  // --- YÊU CẦU MỚI: tự điền ô tra cứu chuyến bay & tìm ---
+  c("search-name").value = name;
+  // lưu tên tìm kiếm
+  localStorage.setItem(SEARCH_STORAGE_KEY, name);
+  setTimeout(()=>renderFlightResults(name), 120);
 });
+
+/* === Matching helpers: token hóa và so khớp chính xác cho số === */
+function tokenizeForMatch(normStr){
+  if(!normStr) return [];
+  // split on spaces and hyphens
+  return normStr.split(/[\s\-]+/).map(s=>s.trim()).filter(Boolean);
+}
+function isNumericToken(tok){
+  return /^\d+$/.test(tok);
+}
+/* nameMatches: searchNorm vs tokenNorm: 
+   - for numeric search tokens => require exact equality with some target token
+   - for textual search tokens => allow target token to startWith search token (prefix match)
+*/
+function nameMatches(searchNorm, tokenNorm){
+  if(!searchNorm || !tokenNorm) return false;
+  const sTokens = tokenizeForMatch(searchNorm);
+  const tTokens = tokenizeForMatch(tokenNorm);
+  if(sTokens.length===0) return false;
+  // every search token must match at least one token in target (respecting numeric exactness)
+  return sTokens.every(st=>{
+    if(isNumericToken(st)){
+      return tTokens.some(tt => tt === st);
+    } else {
+      // textual: allow exact or prefix (so "ANH" matches "ANH3" only if tokenization separated numbers; our tokenization splits numbers)
+      return tTokens.some(tt => tt.startsWith(st));
+    }
+  });
+}
 
 /* --- SEARCH --- */
 function renderSuggestions(q){
@@ -541,9 +576,13 @@ function renderSuggestions(q){
   if(!q||!flightData.length){box.classList.add("hidden");return;}
   const qNorm=normalizeText(q);
   const map=new Map();
-  flightData.forEach(d=>{if(d.nameNormalized&&!map.has(d.nameNormalized))map.set(d.nameNormalized,d.nameOnly);});
-  const matches=[...map.entries()].filter(([norm])=>norm.includes(qNorm))
-    .map(([norm,disp])=>({norm,disp}));
+  // collect unique normalized name -> display
+  flightData.forEach(d=>{
+    if(d.nameNormalized && !map.has(d.nameNormalized)) map.set(d.nameNormalized, d.nameOnly);
+  });
+  const matches=[...map.entries()].filter(([norm])=>{
+    return nameMatches(qNorm, norm);
+  }).map(([norm,disp])=>({norm,disp}));
   if(!matches.length){box.classList.add("hidden");return;}
   box.innerHTML=matches.map(m=>`<div class="px-3 py-2 hover:bg-blue-50 cursor-pointer" data-n="${m.norm}">${m.disp}</div>`).join("");
   box.classList.remove("hidden");
@@ -552,29 +591,33 @@ function renderSuggestions(q){
       const val=div.textContent;
       c("search-name").value=val;
       box.classList.add("hidden");
+      // lưu tên tìm kiếm
+      localStorage.setItem(SEARCH_STORAGE_KEY, val);
       renderFlightResults(val);
     };
   });
 }
-function nameMatches(searchNorm, tokenNorm){
-  if(!searchNorm||!tokenNorm) return false;
-  return tokenNorm===searchNorm || tokenNorm.includes(searchNorm);
-}
+
 function renderFlightResults(nameRaw){
   const container=c("flight-result");
   if(!flightData.length){
     container.innerHTML=`<p class="text-center text-gray-500 italic">Chưa có dữ liệu. Hãy tải file Excel.</p>`;return;
   }
   const qNorm=normalizeText(nameRaw);
-  let matches=flightData.filter(d=>nameMatches(qNorm,d.nameNormalized));
+  // filter using nameMatches (improved)
+  let matches=flightData.filter(d=>nameMatches(qNorm, d.nameNormalized));
   if(!matches.length){container.innerHTML=`<p class="text-center text-gray-500 italic">Không tìm thấy dữ liệu cho "${nameRaw}"</p>`;return;}
+  // dedupe: combine flags if same sheet/flt/etd/gate/name
   const unique=new Map();
   matches.forEach(m=>{
     const key=`${m.sheet}-${m.flt}-${m.etd}-${m.gate}-${m.nameNormalized}`;
     if(unique.has(key)){
       const e=unique.get(key);
-      e.supFlag|=m.supFlag;e.gateFlag|=m.gateFlag;e.ketsoFlag|=m.ketsoFlag;e.wlctFlag|=m.wlctFlag;
-    }else unique.set(key,{...m});
+      e.supFlag = e.supFlag || m.supFlag;
+      e.gateFlag = e.gateFlag || m.gateFlag;
+      e.ketsoFlag = e.ketsoFlag || m.ketsoFlag;
+      e.wlctFlag = e.wlctFlag || m.wlctFlag;
+    } else unique.set(key, {...m});
   });
   matches=[...unique.values()];
   const grouped={};daysOrder.forEach(d=>grouped[d]=[]);
@@ -612,12 +655,15 @@ function renderFlightResults(nameRaw){
     html+=`</div>`;
   });
   container.innerHTML=html;
+
+  // lưu tên tìm kiếm để lần sau tự điền
+  localStorage.setItem(SEARCH_STORAGE_KEY, nameRaw);
 }
 
 /* --- Wire events --- */
 c("search-name").addEventListener("input",e=>renderSuggestions(e.target.value||""));
 c("search-name").addEventListener("keydown",e=>{
-  if(e.key==="Enter"){e.preventDefault();renderFlightResults(e.target.value);}
+  if(e.key==="Enter"){e.preventDefault(); const val=e.target.value; if(val){ localStorage.setItem(SEARCH_STORAGE_KEY, val);} renderFlightResults(e.target.value);}
 });
 
 document.addEventListener("DOMContentLoaded",()=>{
