@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>LỊCH CỐNG HIẾN HGS - Xanh nhạt (FULL Updated)</title>
+  <title>LỊCH CỐNG HIẾN HGS - Xanh nhạt (Fix THƯƠNG 4 & tìm tên chính xác)</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -56,6 +56,9 @@
 
     table.result-table td.center { text-align:center; }
 
+    .board-yes { background: rgba(59,130,246,0.08); } /* xanh dương nhạt */
+    .board-no { background: rgba(239,68,68,0.08); }   /* đỏ nhạt */
+
     .day-container {
       background: white;
       border: 1px solid #dbeafe;
@@ -76,6 +79,8 @@
       border: 2px solid #3b82f6;
       box-shadow: 0 0 10px rgba(59,130,246,0.15);
     }
+
+    .small-muted { font-size:12px; color:#6b7280; }
 
     .btn-main {
       background: #3b82f6;
@@ -119,7 +124,6 @@
     <div class="space-y-2">
       <input id="week-name" type="text" placeholder="Tên tuần (VD: Tuần 44 - Tháng 10)"
              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400">
-
       <div class="flex gap-2 flex-wrap">
         <button id="save-week" class="flex-1 btn-main">💾 Lưu tuần</button>
         <select id="week-select" class="flex-1 border border-gray-300 rounded-lg text-sm px-2 py-2">
@@ -130,17 +134,9 @@
       <div class="space-y-2">
         <input type="file" id="excel-upload" accept=".xls,.xlsx"
                class="w-full border border-gray-300 rounded-lg text-sm px-3 py-2">
-
         <p class="text-xs text-gray-500 mt-1">
-          (Để xem lịch và chuyến bay của tất cả mọi người, hãy tải file Excel và upload lên web,
-          cách tải file Excel tại
-          <a href="https://www.thegioididong.com/tin-tuc/cach-tai-file-google-sheets-ve-dien-thoai-1417179?gidzl=FVum457VWrqou3WJKCA0M3BaFnT8m84AA-Cx5qx1W5akucaO7CU117lcEanEmeK1V-Dh6sPK4OfvMDQAK0"
-            target="_blank"
-            class="text-blue-600 underline">
-            đây
-          </a>)
+          (Để xem lịch và chuyến bay của tất cả mọi người, hãy tải file Excel và upload lên web, cách tải file Excel tại <a href="https://www.thegioididong.com/tin-tuc/cach-tai-file-google-sheets-ve-dien-thoai-1417179?gidzl=FVum457VWrqou3WJKCA0M3BaFnT8m84AA-Cx5qx1W5akucaO7CU117lcEanEmeK1V-Dh6sPK4OfvMDQAK0" target="_blank" class="text-red-500 underline font-medium">đây</a>)
         </p>
-
         <select id="employee-select"
                 class="w-full border border-gray-300 rounded-lg text-sm px-3 py-2">
           <option value="">-- Chọn nhân viên --</option>
@@ -176,11 +172,10 @@
       </p>
     </div>
 
-    <!-- CHUYỂN “Created by Hải 9” thành nút -->
-    <button onclick="window.open('https://www.facebook.com/huy.hai.333030','_blank')"
-      class="w-full text-center mt-3 font-semibold text-blue-600 text-sm bg-blue-50 py-2 rounded-lg shadow-sm hover:bg-blue-100 transition">
+    <a href="https://www.facebook.com/huy.hai.333030" target="_blank"
+      class="text-center mt-3 font-semibold text-blue-600 text-sm bg-blue-50 py-2 rounded-lg shadow-sm block no-underline">
       ✨ Created by Hải 9 ✨
-    </button>
+    </a>
 
     <div class="border-t pt-4 mt-4">
       <h2 class="text-lg font-semibold text-blue-600 text-center mb-2">
@@ -193,10 +188,8 @@
         <input id="search-name" type="text" placeholder="Nhập tên nhân viên (VD: HẢI 9 hoặc Hai 9)"
                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-blue-400"
                autocomplete="off">
-
         <div id="suggestions"
              class="bg-white border border-gray-200 rounded-lg shadow hidden max-h-40 overflow-y-auto"></div>
-
         <div id="flight-result" class="mt-3 text-sm"></div>
       </div>
     </div>
@@ -446,7 +439,6 @@ function parseFlightSheet(sheet,sheetName){
     const gateVal=gateValRaw||lastGate;
     if(fltVal){lastFlt=fltVal;lastEtd=etdVal;lastGate=gateVal;}
     if(!fltVal) continue;
-
     for(let c=startCol;c<=endCol;c++){
       const colLetter=XLSX.utils.encode_col(c);
       const cell=sheet[colLetter+r];
@@ -458,23 +450,19 @@ function parseFlightSheet(sheet,sheetName){
         const found=[...raw.matchAll(/[\p{L}Đđ\-\s]+?\s*\d{1,4}\b/ug)].map(m=>m[0].trim());
         if(found.length>0) parts=found;
       }
-
       const isSup=colLetter==='V',isGate=colLetter==='W',
             isKetso=colLetter==='X',isWlct=colLetter==='Y';
-
       parts.forEach(sp=>{
         const parsedList=parseNameToken(sp);
         if(!parsedList||!parsedList.length) return;
-
         parsedList.forEach(parsed=>{
           const normalizedName=normalizeText(parsed.nameOnly);
-
           out.push({
             sheet:sheetName,row:r,col:colLetter,tokenRaw:sp,
             nameOnly:parsed.nameOnly,nameNormalized:normalizedName,
             tag:parsed.tag,notes:parsed.notes||[],
             flt:fltVal,etd:etdVal,gate:gateVal,
-            supFlag:isSup,gateFlag=isGate,ketsoFlag=isKetso,wlctFlag=isWlct,
+            supFlag:isSup,gateFlag:isGate,ketsoFlag:isKetso,wlctFlag:isWlct,
             uniqueKey:`${sheetName}-${fltVal}-${etdVal}-${gateVal}-${normalizedName}-${colLetter}-${r}`
           });
         });
@@ -494,26 +482,19 @@ function processExcelData(data){
     if(sn){const s=wb.Sheets[sn];allEmp=allEmp.concat(parseSheet(s,sn));}
   });
   employeeData=allEmp;
-
   const sel=c("employee-select");
   sel.innerHTML='<option value="">-- Chọn nhân viên --</option>';
   employeeData.sort((a,b)=>a.name.localeCompare(b.name,"vi",{sensitivity:"base"}))
     .forEach(e=>{
       const o=document.createElement('option');
-      o.value=e.name;
-      o.textContent=e.name+" ("+e.source.toUpperCase().replace("BẢNG CHẤM CÔNG ","")+")";
+      o.value=e.name;o.textContent=e.name+" ("+e.source.toUpperCase().replace("BẢNG CHẤM CÔNG ","")+")";
       sel.appendChild(o);
     });
-
   flightData=[];
   daysOrder.forEach(d=>{
     const sn=wb.SheetNames.find(n=>n.trim().toUpperCase()===d);
-    if(sn){
-      const s=wb.Sheets[sn];
-      flightData=flightData.concat(parseFlightSheet(s,d));
-    }
+    if(sn){const s=wb.Sheets[sn];flightData=flightData.concat(parseFlightSheet(s,d));}
   });
-
   return true;
 }
 
@@ -543,105 +524,91 @@ function loadLastExcelData(){
     processExcelData(arr);
     showToast("Đã tải dữ liệu từ bộ nhớ");
     return true;
-  }catch(e){
-    localStorage.removeItem(EXCEL_STORAGE_KEY);
-    return false;
-  }
+  }catch(e){console.error(e);localStorage.removeItem(EXCEL_STORAGE_KEY);return false;}
 }
 
-/* --- employee-select → auto sync search box --- */
+/* --- employee-select --- */
 c("employee-select").addEventListener("change",e=>{
   const name=e.target.value;if(!name) return;
-
   const emp=employeeData.find(x=>x.name.trim().toLowerCase()===name.trim().toLowerCase());
   if(!emp) return showToast("Không tìm thấy!");
-
-  ["mon","tue","wed","thu","fri","sat","sun"]
-    .forEach((d,i)=>c("day"+i).value=emp[d]||"");
-
+  ["mon","tue","wed","thu","fri","sat","sun"].forEach((d,i)=>c("day"+i).value=emp[d]||"");
   showToast("Đã tải lịch của "+name);
 
-  // Auto điền ô tìm và auto tra cứu
+  // --- YÊU CẦU MỚI: tự điền ô tra cứu chuyến bay & tìm ---
   c("search-name").value = name;
+  // lưu tên tìm kiếm
   localStorage.setItem(SEARCH_STORAGE_KEY, name);
-  setTimeout(()=>renderFlightResults(name),150);
+  setTimeout(()=>renderFlightResults(name), 120);
 });
 
-/* === Token hóa để so khớp đúng tên (fix ANH 3 ≠ ANH 36) === */
+/* === Matching helpers: token hóa và so khớp chính xác cho số === */
 function tokenizeForMatch(normStr){
   if(!normStr) return [];
+  // split on spaces and hyphens
   return normStr.split(/[\s\-]+/).map(s=>s.trim()).filter(Boolean);
 }
 function isNumericToken(tok){
   return /^\d+$/.test(tok);
 }
-
-function nameMatches(searchNorm, targetNorm){
-  if(!searchNorm || !targetNorm) return false;
-
+/* nameMatches: searchNorm vs tokenNorm: 
+   - for numeric search tokens => require exact equality with some target token
+   - for textual search tokens => allow target token to startWith search token (prefix match)
+*/
+function nameMatches(searchNorm, tokenNorm){
+  if(!searchNorm || !tokenNorm) return false;
   const sTokens = tokenizeForMatch(searchNorm);
-  const tTokens = tokenizeForMatch(targetNorm);
-
+  const tTokens = tokenizeForMatch(tokenNorm);
+  if(sTokens.length===0) return false;
+  // every search token must match at least one token in target (respecting numeric exactness)
   return sTokens.every(st=>{
     if(isNumericToken(st)){
       return tTokens.some(tt => tt === st);
     } else {
+      // textual: allow exact or prefix (so "ANH" matches "ANH3" only if tokenization separated numbers; our tokenization splits numbers)
       return tTokens.some(tt => tt.startsWith(st));
     }
   });
 }
 
-/* --- Suggestions --- */
+/* --- SEARCH --- */
 function renderSuggestions(q){
   const box=c("suggestions");
   if(!q||!flightData.length){box.classList.add("hidden");return;}
   const qNorm=normalizeText(q);
-
   const map=new Map();
+  // collect unique normalized name -> display
   flightData.forEach(d=>{
-    if(d.nameNormalized && !map.has(d.nameNormalized))
-      map.set(d.nameNormalized, d.nameOnly);
+    if(d.nameNormalized && !map.has(d.nameNormalized)) map.set(d.nameNormalized, d.nameOnly);
   });
-
-  const matches=[...map.entries()].filter(([norm])=>nameMatches(qNorm,norm))
-    .map(([norm,disp])=>({norm,disp}));
-
+  const matches=[...map.entries()].filter(([norm])=>{
+    return nameMatches(qNorm, norm);
+  }).map(([norm,disp])=>({norm,disp}));
   if(!matches.length){box.classList.add("hidden");return;}
-
-  box.innerHTML=matches.map(m=>`
-    <div class="px-3 py-2 hover:bg-blue-50 cursor-pointer">${m.disp}</div>
-  `).join("");
-
+  box.innerHTML=matches.map(m=>`<div class="px-3 py-2 hover:bg-blue-50 cursor-pointer" data-n="${m.norm}">${m.disp}</div>`).join("");
   box.classList.remove("hidden");
-
   box.querySelectorAll("div").forEach(div=>{
     div.onclick=()=>{
-      const val=div.textContent.trim();
+      const val=div.textContent;
       c("search-name").value=val;
       box.classList.add("hidden");
-      localStorage.setItem(SEARCH_STORAGE_KEY,val);
+      // lưu tên tìm kiếm
+      localStorage.setItem(SEARCH_STORAGE_KEY, val);
       renderFlightResults(val);
     };
   });
 }
 
-/* --- Tra cứu lịch bay --- */
 function renderFlightResults(nameRaw){
   const container=c("flight-result");
-
   if(!flightData.length){
-    container.innerHTML=`<p class="text-center text-gray-500 italic">Chưa có dữ liệu. Hãy tải file Excel.</p>`;
-    return;
+    container.innerHTML=`<p class="text-center text-gray-500 italic">Chưa có dữ liệu. Hãy tải file Excel.</p>`;return;
   }
-
   const qNorm=normalizeText(nameRaw);
-  let matches=flightData.filter(d=>nameMatches(qNorm,d.nameNormalized));
-
-  if(!matches.length){
-    container.innerHTML=`<p class="text-center text-gray-500 italic">Không tìm thấy dữ liệu cho "${nameRaw}"</p>`;
-    return;
-  }
-
+  // filter using nameMatches (improved)
+  let matches=flightData.filter(d=>nameMatches(qNorm, d.nameNormalized));
+  if(!matches.length){container.innerHTML=`<p class="text-center text-gray-500 italic">Không tìm thấy dữ liệu cho "${nameRaw}"</p>`;return;}
+  // dedupe: combine flags if same sheet/flt/etd/gate/name
   const unique=new Map();
   matches.forEach(m=>{
     const key=`${m.sheet}-${m.flt}-${m.etd}-${m.gate}-${m.nameNormalized}`;
@@ -651,97 +618,61 @@ function renderFlightResults(nameRaw){
       e.gateFlag = e.gateFlag || m.gateFlag;
       e.ketsoFlag = e.ketsoFlag || m.ketsoFlag;
       e.wlctFlag = e.wlctFlag || m.wlctFlag;
-    } else {
-      unique.set(key,{...m});
-    }
+    } else unique.set(key, {...m});
   });
-
   matches=[...unique.values()];
-
   const grouped={};daysOrder.forEach(d=>grouped[d]=[]);
   matches.forEach(m=>grouped[m.sheet].push(m));
+  const now=new Date();
+  const vnWeekday=new Intl.DateTimeFormat('vi-VN',{timeZone:'Asia/Bangkok',weekday:'long'}).format(now).toLowerCase();
+  const mapVN={'thứ hai':0,'thứ ba':1,'thứ tư':2,'thứ năm':3,'thứ sáu':4,'thứ bảy':5,'chủ nhật':6};
+  const todayIndex=mapVN[vnWeekday]??new Date().getDay()-1;
 
   let html="";
-  daysOrder.forEach((day)=>{
+  daysOrder.forEach((day,idx)=>{
     const rows=grouped[day];
-    html+=`
-      <div class="day-container">
-        <div class="day-title">${day}</div>
-    `;
+    const isPast=idx<todayIndex, isToday=idx===todayIndex;
+    html+=`<div class="day-container ${isPast?'day-past':''} ${isToday?'day-today':''}">
+      <div class="day-title">${day}</div>`;
     if(!rows.length){
       html+=`<p class="text-gray-400 italic">Không có dữ liệu</p>`;
     } else {
-      html+=`
-        <table class="w-full result-table mt-1">
-        <thead>
-          <tr>
-            <th>FLT</th>
-            <th>ETD</th>
-            <th>SUP</th>
-            <th>GATE</th>
-            <th>Kết sổ</th>
-            <th>WLC</th>
-            <th>Boarding</th>
-          </tr>
-        </thead>
-        <tbody>
-      `;
+      html+=`<table class="w-full result-table mt-1"><thead><tr>
+        <th>FLT</th><th>ETD</th><th>SUP</th><th>GATE</th><th>Kết sổ</th><th>WLC</th><th>Boarding</th></tr></thead><tbody>`;
       rows.forEach(r=>{
         let brd=r.tag==="BRD"?"✅":r.tag==="NO"?"❌":"";
-        html+=`
-          <tr>
-            <td>${r.flt}</td>
-            <td>${r.etd}</td>
-            <td class="center">${r.supFlag?'✅':''}</td>
-            <td class="center">${r.gateFlag?'✅':''}</td>
-            <td class="center">${r.ketsoFlag?'✅':''}</td>
-            <td class="center">${r.wlctFlag?'✅':''}</td>
-            <td class="center">${brd}</td>
-          </tr>
-        `;
+        html+=`<tr>
+          <td>${r.flt||'—'}</td>
+          <td>${r.etd||'—'}</td>
+          <td class="center">${r.supFlag?'✅':''}</td>
+          <td class="center">${r.gateFlag?'✅':''}</td>
+          <td class="center">${r.ketsoFlag?'✅':''}</td>
+          <td class="center">${r.wlctFlag?'✅':''}</td>
+          <td class="center">${brd}</td>
+        </tr>`;
       });
       html+=`</tbody></table>`;
     }
     html+=`</div>`;
   });
+  container.innerHTML=html;
 
-  container.innerHTML = html;
+  // lưu tên tìm kiếm để lần sau tự điền
   localStorage.setItem(SEARCH_STORAGE_KEY, nameRaw);
 }
 
-/* --- Sự kiện nhập tên tìm kiếm --- */
-c("search-name").addEventListener("input",e=>{
-  renderSuggestions(e.target.value||"");
-});
+/* --- Wire events --- */
+c("search-name").addEventListener("input",e=>renderSuggestions(e.target.value||""));
 c("search-name").addEventListener("keydown",e=>{
-  if(e.key==="Enter"){
-    e.preventDefault();
-    const val=e.target.value;
-    if(val) localStorage.setItem(SEARCH_STORAGE_KEY,val);
-    renderFlightResults(val);
-  }
+  if(e.key==="Enter"){e.preventDefault(); const val=e.target.value; if(val){ localStorage.setItem(SEARCH_STORAGE_KEY, val);} renderFlightResults(e.target.value);}
 });
 
-/* --- Khi load trang --- */
 document.addEventListener("DOMContentLoaded",()=>{
-  createInputs();
-  fillWeekSelect();
-  loadLastExcelData();
-
+  createInputs();fillWeekSelect();loadLastExcelData();
   const last=localStorage.getItem(SEARCH_STORAGE_KEY);
-  if(last){
-    c("search-name").value=last;
-    setTimeout(()=>renderFlightResults(last),500);
-  }
-
+  if(last){c("search-name").value=last;setTimeout(()=>renderFlightResults(last),500);}
   c("save-week").onclick=saveWeek;
-  c("week-select").onchange=e=>{
-    const v=e.target.value;
-    if(v){
-      c("week-name").value=v;
-      loadWeek(v);
-    }
-  };
+  c("week-select").onchange=e=>{const v=e.target.value;if(v){c("week-name").value=v;loadWeek(v);} };
   c("calc-week").onclick=calcWeek;
   c("clear-week").onclick=deleteWeek;
   c("clear-all").onclick=clearAll;
