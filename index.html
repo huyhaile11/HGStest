@@ -3,112 +3,41 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>LỊCH CỐNG HIẾN HGS - Xanh nhạt (Fix THƯƠNG 4 & tìm tên chính xác)</title>
+  <title>LỊCH CỐNG HIẾN HGS - Xanh nhạt</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background: #eef4fb;
-      color: #1f2937;
-    }
-
-    .card {
-      background: #ffffff;
-      border-radius: 1rem;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    }
-
+    body { font-family: 'Inter', sans-serif; background: #eef4fb; color: #1f2937; }
+    .card { background: #ffffff; border-radius: 1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
     .toast {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(59,130,246,0.95);
-      color: white;
-      padding: 10px 18px;
-      border-radius: 10px;
-      font-weight: 600;
-      z-index: 9999;
-      animation: fadeInOut 2s forwards;
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: rgba(59,130,246,0.95); color: white; padding: 10px 18px;
+      border-radius: 10px; font-weight: 600; z-index: 9999; animation: fadeInOut 2s forwards;
     }
-
     @keyframes fadeInOut {
       0% { opacity: 0; transform: translate(-50%, -55%); }
       10%, 90% { opacity: 1; transform: translate(-50%, -50%); }
       100% { opacity: 0; transform: translate(-50%, -45%); }
     }
-
     #suggestions { z-index: 50; }
-
-    table.result-table th,
-    table.result-table td {
-      padding: 8px 6px;
-      border-bottom: 1px solid #e5e7eb;
-      font-size: 13px;
-      text-align:left;
-      vertical-align: middle;
+    table.result-table th, table.result-table td {
+      padding: 8px 6px; border-bottom: 1px solid #e5e7eb; font-size: 13px; text-align:left; vertical-align: middle;
     }
-
     table.result-table td.center { text-align:center; }
-
-    .board-yes { background: rgba(59,130,246,0.08); } /* xanh dương nhạt */
-    .board-no { background: rgba(239,68,68,0.08); }   /* đỏ nhạt */
-
-    .day-container {
-      background: white;
-      border: 1px solid #dbeafe;
-      border-radius: 10px;
-      padding: 10px 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-    }
-
-    .day-title {
-      font-weight: 700;
-      font-size: 15px;
-      padding: 4px 0;
-      color: #2563eb;
-    }
-
+    .day-container { background: white; border: 1px solid #dbeafe; border-radius: 10px; padding: 10px 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
+    .day-title { font-weight: 700; font-size: 15px; padding: 4px 0; color: #2563eb; }
     .day-past { opacity: 0.6; background: #f8fafc; }
-    .day-today {
-      border: 2px solid #3b82f6;
-      box-shadow: 0 0 10px rgba(59,130,246,0.15);
-    }
-
-    .small-muted { font-size:12px; color:#6b7280; }
-
-    .btn-main {
-      background: #3b82f6;
-      color: white;
-      border-radius: 8px;
-      padding: 10px 0;
-      font-weight: 600;
-      width: 100%;
-    }
+    .day-today { border: 2px solid #3b82f6; box-shadow: 0 0 10px rgba(59,130,246,0.15); }
+    .btn-main { background: #3b82f6; color: white; border-radius: 8px; padding: 10px 0; font-weight: 600; width: 100%; }
     .btn-main:hover { background: #2563eb; }
-
-    .btn-danger {
-      background: #ef4444;
-      color: white;
-      border-radius: 8px;
-      padding: 10px 0;
-      font-weight: 600;
-      width: 100%;
-    }
-
-    .btn-yellow {
-      background: #facc15;
-      color: #1f2937;
-      border-radius: 8px;
-      padding: 10px 0;
-      font-weight: 600;
-      width: 100%;
-    }
+    .btn-danger { background: #ef4444; color: white; border-radius: 8px; padding: 10px 0; font-weight: 600; width: 100%; }
+    .btn-yellow { background: #facc15; color: #1f2937; border-radius: 8px; padding: 10px 0; font-weight: 600; width: 100%; }
+    
+    .checkbox-wrapper { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+    .checkbox-wrapper input { width: 16px; height: 16px; }
   </style>
 </head>
 
@@ -193,7 +122,63 @@
         <div id="flight-result" class="mt-3 text-sm"></div>
       </div>
     </div>
-  </div>
+
+    <div class="border-t-2 border-blue-100 pt-5 mt-6 bg-white rounded-xl p-3 shadow-sm">
+      <h2 class="text-lg font-bold text-green-600 text-center mb-1">
+        🤝 LÀM HỘ (Chỉ mới code cho K36)
+      </h2>
+      <p class="text-xs text-center text-gray-500 mb-3">
+        Tìm người rảnh (không vướng ca) trong khoảng giờ bạn nhập
+      </p>
+      
+      <div class="space-y-3">
+        <div class="flex gap-2">
+            <div class="w-1/3">
+                <label class="block text-xs font-semibold mb-1">Từ giờ</label>
+                <input id="help-from" type="number" step="0.5" placeholder="11" 
+                       class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+            </div>
+            <div class="w-1/3">
+                <label class="block text-xs font-semibold mb-1">Đến giờ</label>
+                <input id="help-to" type="number" step="0.5" placeholder="18.5" 
+                       class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+            </div>
+            <div class="w-1/3">
+                <label class="block text-xs font-semibold mb-1">Thứ</label>
+                <select id="help-day" class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+                    <option value="mon">Thứ Hai</option>
+                    <option value="tue">Thứ Ba</option>
+                    <option value="wed">Thứ Tư</option>
+                    <option value="thu">Thứ Năm</option>
+                    <option value="fri">Thứ Sáu</option>
+                    <option value="sat">Thứ Bảy</option>
+                    <option value="sun">Chủ Nhật</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="flex justify-center gap-6 py-1">
+            <label class="checkbox-wrapper">
+                <input type="checkbox" id="chk-7c" checked>
+                <span class="text-sm font-medium">Team 7C</span>
+            </label>
+            <label class="checkbox-wrapper">
+                <input type="checkbox" id="chk-pr" checked>
+                <span class="text-sm font-medium">Team PR</span>
+            </label>
+        </div>
+
+        <button id="btn-find-help" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded-lg shadow">
+            🔍 Tìm người rảnh
+        </button>
+
+        <div id="help-result" class="hidden mt-3 bg-green-50 p-3 rounded-lg border border-green-200">
+            <p class="font-bold text-green-700 text-sm mb-2 border-b border-green-200 pb-1">KẾT QUẢ:</p>
+            <ul id="help-list" class="list-disc list-inside text-sm text-gray-700 space-y-1"></ul>
+        </div>
+      </div>
+    </div>
+    </div>
 
   <div id="toast"></div>
 <script>
@@ -353,7 +338,7 @@ function calcWeek(){
   showToast("Đã tính xong!");
 }
 
-/* ---------- EXCEL PARSE ---------- */
+/* ---------- EXCEL PARSE (UPDATE YÊU CẦU 2 & 3: Xử lý nhóm chung BRD/BD) ---------- */
 function combine(a,b){
   const v1=(a||"").toString().trim();
   const v2=(b||"").toString().trim();
@@ -361,6 +346,7 @@ function combine(a,b){
   if(!combined||combined.toUpperCase().includes("OFF")) combined="";
   return combined;
 }
+
 function parseSheet(sheet,name){
   const rows=XLSX.utils.sheet_to_json(sheet,{header:1});
   if(rows.length<2) return [];
@@ -377,36 +363,6 @@ function parseSheet(sheet,name){
   })).filter(e=>e.name);
 }
 
-/* --- FIXED parseNameToken --- */
-function parseNameToken(token){
-  if(!token) return null;
-  let raw=token.toString().trim()
-    .replace(/\u00A0/g,' ')
-    .replace(/[–—]/g,'-')
-    .replace(/^[\s\-–—_]+|[\s\-–—_]+$/g,'')
-    .replace(/\s+/g,' ')
-    .trim();
-  if(!raw) return null;
-  const negativePattern=/\b(KO|K)\s*(BRD|BD)\b/i;
-  const positivePattern=/\b(BRD|BD)\b/i;
-  let tag="";
-  if(negativePattern.test(raw)) tag="NO";
-  else if(positivePattern.test(raw)) tag="BRD";
-  const notes=[];
-  if(/\bK[EÊ]M\s*QUẦY\b/i.test(raw)) notes.push("KÈM QUẦY");
-  const nameNumPattern=/([\p{L}Đđ\s\-]+?)\s+(\d{1,4})(?=\b|[;,\n\/]|$)/ug;
-  const matches=[...raw.matchAll(nameNumPattern)];
-  if(matches.length>0){
-    return matches.map(m=>({
-      nameOnly:`${m[1].trim()} ${m[2].trim()}`.toUpperCase(),
-      tag,
-      notes
-    }));
-  }
-  return [{nameOnly:raw.toUpperCase(),tag,notes}];
-}
-
-/* --- Excel time --- */
 function excelTimeToHHMM(v){
   if(v===undefined||v===null) return "";
   if(typeof v==='string') return v.trim();
@@ -420,13 +376,16 @@ function excelTimeToHHMM(v){
   return String(v);
 }
 
-/* --- parseFlightSheet (đã fix regex & nhiều tên) --- */
+/* --- parseFlightSheet (LOGIC MỚI CHO BD/BRD) --- */
 function parseFlightSheet(sheet,sheetName){
   const out=[];
   const startRow=4,endRow=200;
   const startCol=XLSX.utils.decode_col('V');
   const endCol=XLSX.utils.decode_col('AL');
   let lastFlt="",lastEtd="",lastGate="";
+  
+  const namePattern = /([\p{L}Đđ\s\-]+?)\s+(\d{1,4})/ug;
+
   for(let r=startRow;r<=endRow;r++){
     const fltCell=sheet['Q'+r];
     const etdCell=sheet['R'+r];
@@ -439,28 +398,39 @@ function parseFlightSheet(sheet,sheetName){
     const gateVal=gateValRaw||lastGate;
     if(fltVal){lastFlt=fltVal;lastEtd=etdVal;lastGate=gateVal;}
     if(!fltVal) continue;
+
     for(let c=startCol;c<=endCol;c++){
       const colLetter=XLSX.utils.encode_col(c);
       const cell=sheet[colLetter+r];
       if(!cell||!cell.v) continue;
       let raw=String(cell.v).trim();
       if(!raw) continue;
-      let parts=raw.split(/[,;\n|/]+/).map(x=>x.trim()).filter(Boolean);
-      if(parts.length===1){
-        const found=[...raw.matchAll(/[\p{L}Đđ\-\s]+?\s*\d{1,4}\b/ug)].map(m=>m[0].trim());
-        if(found.length>0) parts=found;
-      }
+      
+      const taskGroups = raw.split(/[;\n]+/).map(x=>x.trim()).filter(Boolean);
+      
       const isSup=colLetter==='V',isGate=colLetter==='W',
             isKetso=colLetter==='X',isWlct=colLetter==='Y';
-      parts.forEach(sp=>{
-        const parsedList=parseNameToken(sp);
-        if(!parsedList||!parsedList.length) return;
-        parsedList.forEach(parsed=>{
-          const normalizedName=normalizeText(parsed.nameOnly);
+
+      taskGroups.forEach(groupStr => {
+        const upperGroup = groupStr.toUpperCase();
+        let tag = "";
+        const hasBD = /\b(BRD|BD)\b/.test(upperGroup);
+        const hasKO = /\b(KO|K)\s*(BRD|BD)\b/.test(upperGroup);
+        if (hasKO) tag = "NO";
+        else if (hasBD) tag = "BRD";
+
+        const notes = [];
+        if(/\bK[EÊ]M\s*QUẦY\b/.test(upperGroup)) notes.push("KÈM QUẦY");
+
+        const matches = [...groupStr.matchAll(namePattern)];
+        matches.forEach(m => {
+          const nameOnly = `${m[1].trim()} ${m[2].trim()}`.toUpperCase();
+          const normalizedName = normalizeText(nameOnly);
           out.push({
-            sheet:sheetName,row:r,col:colLetter,tokenRaw:sp,
-            nameOnly:parsed.nameOnly,nameNormalized:normalizedName,
-            tag:parsed.tag,notes:parsed.notes||[],
+            sheet:sheetName,row:r,col:colLetter,tokenRaw:groupStr,
+            nameOnly:nameOnly,nameNormalized:normalizedName,
+            tag:tag,
+            notes:notes,
             flt:fltVal,etd:etdVal,gate:gateVal,
             supFlag:isSup,gateFlag:isGate,ketsoFlag:isKetso,wlctFlag:isWlct,
             uniqueKey:`${sheetName}-${fltVal}-${etdVal}-${gateVal}-${normalizedName}-${colLetter}-${r}`
@@ -535,37 +505,28 @@ c("employee-select").addEventListener("change",e=>{
   ["mon","tue","wed","thu","fri","sat","sun"].forEach((d,i)=>c("day"+i).value=emp[d]||"");
   showToast("Đã tải lịch của "+name);
 
-  // --- YÊU CẦU MỚI: tự điền ô tra cứu chuyến bay & tìm ---
   c("search-name").value = name;
-  // lưu tên tìm kiếm
   localStorage.setItem(SEARCH_STORAGE_KEY, name);
   setTimeout(()=>renderFlightResults(name), 120);
 });
 
-/* === Matching helpers: token hóa và so khớp chính xác cho số === */
+/* === Matching helpers === */
 function tokenizeForMatch(normStr){
   if(!normStr) return [];
-  // split on spaces and hyphens
   return normStr.split(/[\s\-]+/).map(s=>s.trim()).filter(Boolean);
 }
 function isNumericToken(tok){
   return /^\d+$/.test(tok);
 }
-/* nameMatches: searchNorm vs tokenNorm: 
-   - for numeric search tokens => require exact equality with some target token
-   - for textual search tokens => allow target token to startWith search token (prefix match)
-*/
 function nameMatches(searchNorm, tokenNorm){
   if(!searchNorm || !tokenNorm) return false;
   const sTokens = tokenizeForMatch(searchNorm);
   const tTokens = tokenizeForMatch(tokenNorm);
   if(sTokens.length===0) return false;
-  // every search token must match at least one token in target (respecting numeric exactness)
   return sTokens.every(st=>{
     if(isNumericToken(st)){
       return tTokens.some(tt => tt === st);
     } else {
-      // textual: allow exact or prefix (so "ANH" matches "ANH3" only if tokenization separated numbers; our tokenization splits numbers)
       return tTokens.some(tt => tt.startsWith(st));
     }
   });
@@ -577,7 +538,6 @@ function renderSuggestions(q){
   if(!q||!flightData.length){box.classList.add("hidden");return;}
   const qNorm=normalizeText(q);
   const map=new Map();
-  // collect unique normalized name -> display
   flightData.forEach(d=>{
     if(d.nameNormalized && !map.has(d.nameNormalized)) map.set(d.nameNormalized, d.nameOnly);
   });
@@ -592,7 +552,6 @@ function renderSuggestions(q){
       const val=div.textContent;
       c("search-name").value=val;
       box.classList.add("hidden");
-      // lưu tên tìm kiếm
       localStorage.setItem(SEARCH_STORAGE_KEY, val);
       renderFlightResults(val);
     };
@@ -605,10 +564,8 @@ function renderFlightResults(nameRaw){
     container.innerHTML=`<p class="text-center text-gray-500 italic">Chưa có dữ liệu. Hãy tải file Excel.</p>`;return;
   }
   const qNorm=normalizeText(nameRaw);
-  // filter using nameMatches (improved)
   let matches=flightData.filter(d=>nameMatches(qNorm, d.nameNormalized));
   if(!matches.length){container.innerHTML=`<p class="text-center text-gray-500 italic">Không tìm thấy dữ liệu cho "${nameRaw}"</p>`;return;}
-  // dedupe: combine flags if same sheet/flt/etd/gate/name
   const unique=new Map();
   matches.forEach(m=>{
     const key=`${m.sheet}-${m.flt}-${m.etd}-${m.gate}-${m.nameNormalized}`;
@@ -656,10 +613,100 @@ function renderFlightResults(nameRaw){
     html+=`</div>`;
   });
   container.innerHTML=html;
-
-  // lưu tên tìm kiếm để lần sau tự điền
   localStorage.setItem(SEARCH_STORAGE_KEY, nameRaw);
 }
+
+/* ========================================================
+   YÊU CẦU 4: TÍNH NĂNG "LÀM HỘ" - CHECK AVAILABILITY RANGE
+   ======================================================== */
+const team7c = ["HẢI 9", "HUY 14", "DŨNG 12", "KHẢI 2", "HUY 12", "HẰNG 14", "HUYỀN 15", "LY 5", "THU 9", "LẬP 2"];
+const teamPR = ["NGHĨA 1", "TRÂM 3", "HOÀNG 10", "HUY 11", "THÚY 7", "ANH 10", "TUẤN 11", "LY 2", "SƠN 12", "KHÁNH 2"];
+
+function checkHelp(){
+    const fromH = parseFloat(c('help-from').value);
+    const toH = parseFloat(c('help-to').value);
+    const daySelect = c('help-day').value; 
+    const use7c = c('chk-7c').checked;
+    const usePR = c('chk-pr').checked;
+    const resultList = c('help-list');
+    const resultBox = c('help-result');
+
+    if(isNaN(fromH) || isNaN(toH)){
+        showToast("Vui lòng nhập giờ đầy đủ (VD: 11 và 18.5)");
+        return;
+    }
+    if(fromH >= toH){
+        showToast("Giờ kết thúc phải lớn hơn giờ bắt đầu!");
+        return;
+    }
+    if(!employeeData.length){
+        showToast("Chưa có dữ liệu. Vui lòng tải Excel trước.");
+        return;
+    }
+    if(!use7c && !usePR){
+        showToast("Chọn ít nhất 1 team!");
+        return;
+    }
+
+    let targetNames = [];
+    if(use7c) targetNames = [...targetNames, ...team7c];
+    if(usePR) targetNames = [...targetNames, ...teamPR];
+
+    let freeList = [];
+
+    targetNames.forEach(rawName => {
+        const normSearch = normalizeText(rawName);
+        const emp = employeeData.find(e => nameMatches(normSearch, normalizeText(e.name)));
+        
+        if(!emp){
+            freeList.push({name: rawName, reason: "Không có trong bảng CC"});
+            return;
+        }
+
+        const shiftStr = emp[daySelect];
+        if(!shiftStr){
+            freeList.push({name: rawName, reason: "OFF"});
+            return;
+        }
+        
+        const parts = shiftStr.split(";").map(x=>x.trim()).filter(Boolean);
+        let isBusy = false;
+        
+        for(let p of parts){
+            const s = parseShift(p);
+            if(s && !s.error){
+                // KIỂM TRA GIAO NHAU (INTERSECTION)
+                // Khoảng cần tìm: [fromH, toH]
+                // Ca làm việc: [s.start, s.end]
+                // Công thức giao nhau: Max(start1, start2) < Min(end1, end2)
+                
+                // s.end đã được +24 nếu qua đêm trong hàm parseShift (VD: A -> 22 đến 30)
+                // Nếu bạn tìm giờ 23 đến 25 (1h sáng), nhập 23 - 25.
+                
+                const overlap = Math.max(fromH, s.start) < Math.min(toH, s.end);
+                if(overlap) isBusy = true;
+            }
+        }
+
+        if(!isBusy){
+            freeList.push({name: rawName, reason: shiftStr});
+        }
+    });
+
+    resultList.innerHTML = "";
+    if(freeList.length === 0){
+        resultList.innerHTML = "<li class='text-red-600 font-semibold'>Không có ai rảnh trong khoảng này!</li>";
+    } else {
+        freeList.forEach(item => {
+            const li = document.createElement("li");
+            li.innerHTML = `<span class="font-bold text-gray-800">${item.name}</span> <span class="text-xs text-gray-500">(${item.reason})</span>`;
+            resultList.appendChild(li);
+        });
+    }
+    resultBox.classList.remove("hidden");
+}
+
+c("btn-find-help").addEventListener("click", checkHelp);
 
 /* --- Wire events --- */
 c("search-name").addEventListener("input",e=>renderSuggestions(e.target.value||""));
