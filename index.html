@@ -46,7 +46,7 @@
     <div class="text-center">
       <h1 class="text-xl font-bold text-blue-600">📅 LỊCH "CỐNG HIẾN" HGS</h1>
       <p class="text-sm text-gray-500 mt-1">
-        Nhập ca như: S; X; A; HC; 1X; 1-X; X1; X-1; 0.5X-1...
+        Nhập ca như: S; X; A; HC; 1X; 1-X; X1; X-1; 0.5X-1; H; DH; M...
       </p>
     </div>
 
@@ -182,7 +182,7 @@
 
   <div id="toast"></div>
 <script>
-/* ======== KHỞI TẠO INPUT CHO CÁC THỨ ======== */
+/* ======== KHỞI TẠO INPUT CHO CÁC THỨ (Không đổi) ======== */
 document.addEventListener("DOMContentLoaded", () => {
   const days = ["Thứ Hai","Thứ Ba","Thứ Tư","Thứ Năm","Thứ Sáu","Thứ Bảy","Chủ Nhật"];
   const box = document.getElementById("days-container");
@@ -204,8 +204,8 @@ document.addEventListener("DOMContentLoaded", () => {
 const c = id => document.getElementById(id);
 const days = ["Thứ Hai","Thứ Ba","Thứ Tư","Thứ Năm","Thứ Sáu","Thứ Bảy","Chủ Nhật"];
 const daysOrder = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
-const EXCEL_STORAGE_KEY = 'hgs_last_excel_data';
-const SEARCH_STORAGE_KEY = 'hgs_last_search_name';
+const EXCEL_STORAGE_KEY = 'hgs_last_excel_data_v3';
+const SEARCH_STORAGE_KEY = 'hgs_last_search_name_v3';
 
 let employeeData = [];
 let flightData = [];
@@ -218,7 +218,7 @@ const showToast = msg => {
   setTimeout(()=>t.remove(),2000);
 };
 
-/* --------- CHUẨN HÓA CHUỖI ---------- */
+/* --------- CHUẨN HÓA CHUỖI (Không đổi) ---------- */
 function removeDiacritics(str){
   if(!str) return "";
   const s = str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -235,7 +235,7 @@ function normalizeText(s){
     .toUpperCase();
 }
 
-/* ---------- LƯU TUẦN, TẢI TUẦN ---------- */
+/* ---------- LƯU/TẢI TUẦN (Không đổi) ---------- */
 function createInputs(){
   const box = c("days-container");
   box.innerHTML = "";
@@ -296,11 +296,39 @@ function clearAll(){
   showToast("Đã xóa tất cả");
 }
 
-/* ---------- TÍNH CA ---------- */
-const shifts={HC:{start:7.5,end:15.5},A:{start:22,end:30},X:{start:14,end:22},S:{start:6,end:14}};
+/* ---------- TÍNH CA (Không đổi) ---------- */
+const shifts={
+  HC:{start:7.5,end:15.5},A:{start:22,end:30},X:{start:14,end:22},S:{start:6,end:14}
+};
 function parseShift(str){
   str=(str||"").toUpperCase().trim();
   if(!str) return null;
+  if(str==="OM"||str==="OFF") return {start:0,end:0,dur:0}; 
+
+  const re_fixed=/^(\d*\.?\d*-?)?(H|DH|M)(\d*\.?\d*)?(-?\d*\.?\d*)?$/; 
+  const m_fixed=re_fixed.exec(str);
+  if(m_fixed){
+      const [,pre,code,val,suf]=m_fixed;
+      let duration=8, start=8; 
+      
+      if(code==="DH"||code==="M"){
+          duration=parseFloat(val)||0;
+      } else if (code==="H"){
+          if(val){duration=parseFloat(val);}
+          if(/H4S/.test(str)) { start=8; duration=4; } 
+          else if(/H4C/.test(str)) { start=14; duration=4; }
+      }
+      
+      if(duration<=0) return {start:0,end:0,dur:0};
+      
+      let end=start+duration;
+      if(pre){ const v=parseFloat(pre.replace("-","")); pre.includes("-")?start+=v:start-=v; }
+      if(suf){ const v=parseFloat(suf.replace("-","")); suf.startsWith("-")?end-=v:end+=v; }
+
+      if(start>=end) end+=24;
+      return {start,end,dur:end-start};
+  }
+  
   const re=/^(\d*\.?\d*-?)?([A-Z]{1,2})(-?\d*\.?\d*)?$/;
   const m=re.exec(str);
   if(!m) return {error:"Sai định dạng"};
@@ -327,9 +355,16 @@ function calcWeek(){
     parts.forEach((p,j)=>{
       const r=parseShift(p);
       if(r&&r.error){tbody.innerHTML+=`<tr><td>${j?"":d}</td><td>${p}</td><td colspan=3 class="text-red-600">${r.error}</td></tr>`;return;}
-      if(r){tbody.innerHTML+=`<tr><td>${j?"":d}</td><td>${p}</td><td>${fmtHoursToHHMM(r.start)}</td><td>${fmtHoursToHHMM(r.end)}</td><td>${r.dur.toFixed(1)}h</td></tr>`;sum+=r.dur;}
+      if(r){
+          if(r.dur===0 && (p==="OM"||p==="OFF")){
+              tbody.innerHTML+=`<tr><td>${j?"":d}</td><td>${p}</td><td colspan=3 class="italic text-gray-400">${p==="OM"?"Nghỉ ốm":"Nghỉ OFF"}</td></tr>`;
+          } else if(r.dur>0){
+              tbody.innerHTML+=`<tr><td>${j?"":d}</td><td>${p}</td><td>${fmtHoursToHHMM(r.start)}</td><td>${fmtHoursToHHMM(r.end)}</td><td>${r.dur.toFixed(1)}h</td></tr>`;
+              sum+=r.dur;
+          }
+      }
     });
-    if(parts.length>1) tbody.innerHTML+=`<tr class="bg-blue-50 font-medium"><td></td><td colspan=3>Tổng ngày</td><td>${sum.toFixed(1)}h</td></tr>`;
+    if(parts.length>1) tbody.innerHTML+=`<tr class="bg-blue-50 font-medium"><td></td><td colspan=3>Tổng ngày</td><td>${sum.toFixed(1)}h</td></td></tr>`;
     total+=sum;
   });
   tbody.innerHTML+=`<tr class="bg-blue-100 font-bold"><td colspan=4>Tổng tuần</td><td>${total.toFixed(1)}h</td></tr>`;
@@ -338,7 +373,7 @@ function calcWeek(){
   showToast("Đã tính xong!");
 }
 
-/* ---------- EXCEL PARSE (UPDATE YÊU CẦU 2 & 3: Xử lý nhóm chung BRD/BD) ---------- */
+/* ---------- EXCEL PARSE (Không đổi) ---------- */
 function combine(a,b){
   const v1=(a||"").toString().trim();
   const v2=(b||"").toString().trim();
@@ -376,20 +411,25 @@ function excelTimeToHHMM(v){
   return String(v);
 }
 
-/* --- parseFlightSheet (LOGIC MỚI CHO BD/BRD) --- */
+/* --- parseFlightSheet (Đã cập nhật cột và hàng) --- */
 function parseFlightSheet(sheet,sheetName){
   const out=[];
-  const startRow=4,endRow=200;
-  const startCol=XLSX.utils.decode_col('V');
-  const endCol=XLSX.utils.decode_col('AL');
+  const startRow=4,endRow=46;
+  
+  const fltCol='M'; const etdCol='N'; const gateCol='Q'; 
+  
+  const startCol=XLSX.utils.decode_col('P');
+  const endCol=XLSX.utils.decode_col('AF');
+
   let lastFlt="",lastEtd="",lastGate="";
   
   const namePattern = /([\p{L}Đđ\s\-]+?)\s+(\d{1,4})/ug;
 
   for(let r=startRow;r<=endRow;r++){
-    const fltCell=sheet['Q'+r];
-    const etdCell=sheet['R'+r];
-    const gateCell=sheet['G'+r];
+    const fltCell=sheet[fltCol+r];
+    const etdCell=sheet[etdCol+r];
+    const gateCell=sheet[gateCol+r];
+
     const fltValRaw=fltCell?(fltCell.v||'').toString().trim():'';
     const etdValRaw=etdCell?etdCell.v:'';
     const gateValRaw=gateCell?(gateCell.v||'').toString().trim():'';
@@ -408,8 +448,8 @@ function parseFlightSheet(sheet,sheetName){
       
       const taskGroups = raw.split(/[;\n]+/).map(x=>x.trim()).filter(Boolean);
       
-      const isSup=colLetter==='V',isGate=colLetter==='W',
-            isKetso=colLetter==='X',isWlct=colLetter==='Y';
+      const isSup=colLetter==='P',isGate=colLetter==='Q',
+            isKetso=colLetter==='R',isWlct=colLetter==='S';
 
       taskGroups.forEach(groupStr => {
         const upperGroup = groupStr.toUpperCase();
@@ -442,7 +482,7 @@ function parseFlightSheet(sheet,sheetName){
   return out;
 }
 
-/* --- Đọc file Excel & gộp dữ liệu --- */
+/* --- Đọc file Excel & gộp dữ liệu (Không đổi) --- */
 function processExcelData(data){
   const wb=XLSX.read(data,{type:"array"});
   const target=["bảng chấm công qt","bảng chấm công nđ"];
@@ -468,7 +508,7 @@ function processExcelData(data){
   return true;
 }
 
-/* --- File Upload --- */
+/* --- File Upload (Không đổi) --- */
 c("excel-upload").addEventListener("change",e=>{
   const f=e.target.files[0];if(!f) return;
   const r=new FileReader();
@@ -483,7 +523,7 @@ c("excel-upload").addEventListener("change",e=>{
   r.readAsArrayBuffer(f);
 });
 
-/* --- Tải lại file lưu --- */
+/* --- Tải lại file lưu (Không đổi) --- */
 function loadLastExcelData(){
   const base64=localStorage.getItem(EXCEL_STORAGE_KEY);
   if(!base64) return false;
@@ -497,7 +537,7 @@ function loadLastExcelData(){
   }catch(e){console.error(e);localStorage.removeItem(EXCEL_STORAGE_KEY);return false;}
 }
 
-/* --- employee-select --- */
+/* --- employee-select (Không đổi) --- */
 c("employee-select").addEventListener("change",e=>{
   const name=e.target.value;if(!name) return;
   const emp=employeeData.find(x=>x.name.trim().toLowerCase()===name.trim().toLowerCase());
@@ -510,29 +550,32 @@ c("employee-select").addEventListener("change",e=>{
   setTimeout(()=>renderFlightResults(name), 120);
 });
 
-/* === Matching helpers === */
+/* === Matching helpers (ĐÃ CẬP NHẬT: Chia thành 2 loại match) === */
+
+// Helper: Tách chuỗi thành token (VD: "HAI 9" -> ["HAI", "9"])
 function tokenizeForMatch(normStr){
   if(!normStr) return [];
   return normStr.split(/[\s\-]+/).map(s=>s.trim()).filter(Boolean);
 }
-function isNumericToken(tok){
-  return /^\d+$/.test(tok);
+
+// F_1: Exact String Match (Chỉ tìm tên chính xác, dùng cho KẾT QUẢ CUỐI và LÀM HỘ)
+function exactNameMatches(searchNorm, tokenNorm){
+  return searchNorm === tokenNorm;
 }
-function nameMatches(searchNorm, tokenNorm){
+
+// F_2: Partial Token Match (Dùng cho GỢI Ý TÌM KIẾM, cho phép tìm kiếm một phần token)
+function partialNameMatches(searchNorm, tokenNorm){
   if(!searchNorm || !tokenNorm) return false;
   const sTokens = tokenizeForMatch(searchNorm);
   const tTokens = tokenizeForMatch(tokenNorm);
   if(sTokens.length===0) return false;
+  // Kiểm tra tất cả token trong chuỗi tìm kiếm (sTokens) phải có mặt trong chuỗi đích (tTokens)
   return sTokens.every(st=>{
-    if(isNumericToken(st)){
-      return tTokens.some(tt => tt === st);
-    } else {
-      return tTokens.some(tt => tt.startsWith(st));
-    }
+    return tTokens.some(tt => tt === st);
   });
 }
 
-/* --- SEARCH --- */
+/* --- SEARCH (ĐÃ CẬP NHẬT: Dùng partialNameMatches) --- */
 function renderSuggestions(q){
   const box=c("suggestions");
   if(!q||!flightData.length){box.classList.add("hidden");return;}
@@ -541,8 +584,9 @@ function renderSuggestions(q){
   flightData.forEach(d=>{
     if(d.nameNormalized && !map.has(d.nameNormalized)) map.set(d.nameNormalized, d.nameOnly);
   });
+  // Sử dụng partialNameMatches cho GỢI Ý
   const matches=[...map.entries()].filter(([norm])=>{
-    return nameMatches(qNorm, norm);
+    return partialNameMatches(qNorm, norm);
   }).map(([norm,disp])=>({norm,disp}));
   if(!matches.length){box.classList.add("hidden");return;}
   box.innerHTML=matches.map(m=>`<div class="px-3 py-2 hover:bg-blue-50 cursor-pointer" data-n="${m.norm}">${m.disp}</div>`).join("");
@@ -558,13 +602,15 @@ function renderSuggestions(q){
   });
 }
 
+/* --- renderFlightResults (ĐÃ CẬP NHẬT: Dùng exactNameMatches) --- */
 function renderFlightResults(nameRaw){
   const container=c("flight-result");
   if(!flightData.length){
     container.innerHTML=`<p class="text-center text-gray-500 italic">Chưa có dữ liệu. Hãy tải file Excel.</p>`;return;
   }
   const qNorm=normalizeText(nameRaw);
-  let matches=flightData.filter(d=>nameMatches(qNorm, d.nameNormalized));
+  // Sử dụng exactNameMatches cho KẾT QUẢ CUỐI
+  let matches=flightData.filter(d=>exactNameMatches(qNorm, d.nameNormalized));
   if(!matches.length){container.innerHTML=`<p class="text-center text-gray-500 italic">Không tìm thấy dữ liệu cho "${nameRaw}"</p>`;return;}
   const unique=new Map();
   matches.forEach(m=>{
@@ -617,7 +663,7 @@ function renderFlightResults(nameRaw){
 }
 
 /* ========================================================
-   YÊU CẦU 4: TÍNH NĂNG "LÀM HỘ" - CHECK AVAILABILITY RANGE
+   TÍNH NĂNG "LÀM HỘ" - CHECK AVAILABILITY RANGE (ĐÃ CẬP NHẬT: Dùng exactNameMatches)
    ======================================================== */
 const team7c = ["HẢI 9", "HUY 14", "DŨNG 12", "KHẢI 2", "HUY 12", "HẰNG 14", "HUYỀN 15", "LY 5", "THU 9", "LẬP 2"];
 const teamPR = ["NGHĨA 1", "TRÂM 3", "HOÀNG 10", "HUY 11", "THÚY 7", "ANH 10", "TUẤN 11", "LY 2", "SƠN 12", "KHÁNH 2"];
@@ -656,7 +702,8 @@ function checkHelp(){
 
     targetNames.forEach(rawName => {
         const normSearch = normalizeText(rawName);
-        const emp = employeeData.find(e => nameMatches(normSearch, normalizeText(e.name)));
+        // Sử dụng exactNameMatches để so khớp chính xác tên team với bảng chấm công
+        const emp = employeeData.find(e => exactNameMatches(normSearch, normalizeText(e.name)));
         
         if(!emp){
             freeList.push({name: rawName, reason: "Không có trong bảng CC"});
@@ -674,15 +721,7 @@ function checkHelp(){
         
         for(let p of parts){
             const s = parseShift(p);
-            if(s && !s.error){
-                // KIỂM TRA GIAO NHAU (INTERSECTION)
-                // Khoảng cần tìm: [fromH, toH]
-                // Ca làm việc: [s.start, s.end]
-                // Công thức giao nhau: Max(start1, start2) < Min(end1, end2)
-                
-                // s.end đã được +24 nếu qua đêm trong hàm parseShift (VD: A -> 22 đến 30)
-                // Nếu bạn tìm giờ 23 đến 25 (1h sáng), nhập 23 - 25.
-                
+            if(s && !s.error && s.dur>0){ 
                 const overlap = Math.max(fromH, s.start) < Math.min(toH, s.end);
                 if(overlap) isBusy = true;
             }
