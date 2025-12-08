@@ -44,7 +44,7 @@
 <body class="p-3">
   <div class="max-w-lg mx-auto card p-4 space-y-4">
     <div class="text-center">
-      <h1 class="text-xl font-bold text-blue-600">📅 LỊCH "CỐNG HIẾN" HGS</h1>
+      <h1 class="text-xl font-bold text-blue-600">📅 LỊCH "CỐNG HIẾN NĐ" HGS(Nội Địa)</h1>
       <p class="text-sm text-gray-500 mt-1">
         Nhập ca như: S; X; A; HC; 1X; 1-X; X1; X-1; 0.5X-1; H; DH; M...
       </p>
@@ -125,27 +125,21 @@
 
     <div class="border-t-2 border-blue-100 pt-5 mt-6 bg-white rounded-xl p-3 shadow-sm">
       <h2 class="text-lg font-bold text-green-600 text-center mb-1">
-        🤝 LÀM HỘ (Chỉ mới code cho K36)
+        🤝 LÀM HỘ
       </h2>
       <p class="text-xs text-center text-gray-500 mb-3">
         Tìm người rảnh (không vướng ca) trong khoảng giờ bạn nhập
       </p>
       
       <div class="space-y-3">
-        <div class="flex gap-2">
+        <div class="flex gap-2 items-end">
             <div class="w-1/3">
-                <label class="block text-xs font-semibold mb-1">Từ giờ</label>
-                <input id="help-from" type="number" step="0.5" placeholder="11" 
+                <label class="block text-xs font-semibold mb-1 text-blue-700">TỪ LÚC:</label>
+                <input id="help-from-h" type="number" step="0.5" placeholder="11" 
                        class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
             </div>
-            <div class="w-1/3">
-                <label class="block text-xs font-semibold mb-1">Đến giờ</label>
-                <input id="help-to" type="number" step="0.5" placeholder="18.5" 
-                       class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
-            </div>
-            <div class="w-1/3">
-                <label class="block text-xs font-semibold mb-1">Thứ</label>
-                <select id="help-day" class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+            <div class="w-2/3">
+                <select id="help-from-day" class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
                     <option value="mon">Thứ Hai</option>
                     <option value="tue">Thứ Ba</option>
                     <option value="wed">Thứ Tư</option>
@@ -157,18 +151,37 @@
             </div>
         </div>
 
-        <div class="flex justify-center gap-6 py-1">
+        <div class="flex gap-2 items-end">
+            <div class="w-1/3">
+                <label class="block text-xs font-semibold mb-1 text-red-700">ĐẾN LÚC:</label>
+                <input id="help-to-h" type="number" step="0.5" placeholder="18.5" 
+                       class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+            </div>
+            <div class="w-2/3">
+                <select id="help-to-day" class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+                    <option value="mon">Thứ Hai</option>
+                    <option value="tue">Thứ Ba</option>
+                    <option value="wed">Thứ Tư</option>
+                    <option value="thu">Thứ Năm</option>
+                    <option value="fri">Thứ Sáu</option>
+                    <option value="sat">Thứ Bảy</option>
+                    <option value="sun">Chủ Nhật</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="flex justify-center gap-6 py-2 bg-gray-50 rounded-lg">
             <label class="checkbox-wrapper">
-                <input type="checkbox" id="chk-7c" checked>
-                <span class="text-sm font-medium">Team 7C</span>
+                <input type="checkbox" id="chk-sup">
+                <span class="text-sm font-bold text-purple-700">Team SUP</span>
             </label>
             <label class="checkbox-wrapper">
-                <input type="checkbox" id="chk-pr" checked>
-                <span class="text-sm font-medium">Team PR</span>
+                <input type="checkbox" id="chk-gate">
+                <span class="text-sm font-bold text-orange-700">Team GATE</span>
             </label>
         </div>
 
-        <button id="btn-find-help" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded-lg shadow">
+        <button id="btn-find-help" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded-lg shadow transition-colors">
             🔍 Tìm người rảnh
         </button>
 
@@ -411,15 +424,18 @@ function excelTimeToHHMM(v){
   return String(v);
 }
 
-/* --- parseFlightSheet (Đã cập nhật cột và hàng) --- */
+/* --- parseFlightSheet (CẬP NHẬT CỘT MỚI) --- */
 function parseFlightSheet(sheet,sheetName){
   const out=[];
-  const startRow=4,endRow=46;
+  // Update Row Range
+  const startRow=4, endRow=27; 
   
-  const fltCol='M'; const etdCol='N'; const gateCol='Q'; 
+  // Update Columns: FLT(I), ETD(J), SUP(K), GATE(L), KETSO(M), WLC(N)
+  const fltCol='I'; const etdCol='J'; const gateCol='L'; 
   
-  const startCol=XLSX.utils.decode_col('P');
-  const endCol=XLSX.utils.decode_col('AF');
+  // Update Employee Data Range: K -> AA
+  const startCol=XLSX.utils.decode_col('K');
+  const endCol=XLSX.utils.decode_col('AA');
 
   let lastFlt="",lastEtd="",lastGate="";
   
@@ -448,8 +464,11 @@ function parseFlightSheet(sheet,sheetName){
       
       const taskGroups = raw.split(/[;\n]+/).map(x=>x.trim()).filter(Boolean);
       
-      const isSup=colLetter==='P',isGate=colLetter==='Q',
-            isKetso=colLetter==='R',isWlct=colLetter==='S';
+      // Update Column Flags based on Letters
+      const isSup=colLetter==='K', 
+            isGate=colLetter==='L',
+            isKetso=colLetter==='M',
+            isWlct=colLetter==='N';
 
       taskGroups.forEach(groupStr => {
         const upperGroup = groupStr.toUpperCase();
@@ -550,32 +569,27 @@ c("employee-select").addEventListener("change",e=>{
   setTimeout(()=>renderFlightResults(name), 120);
 });
 
-/* === Matching helpers (ĐÃ CẬP NHẬT: Chia thành 2 loại match) === */
-
-// Helper: Tách chuỗi thành token (VD: "HAI 9" -> ["HAI", "9"])
+/* === Matching helpers (Không đổi) === */
 function tokenizeForMatch(normStr){
   if(!normStr) return [];
   return normStr.split(/[\s\-]+/).map(s=>s.trim()).filter(Boolean);
 }
 
-// F_1: Exact String Match (Chỉ tìm tên chính xác, dùng cho KẾT QUẢ CUỐI và LÀM HỘ)
 function exactNameMatches(searchNorm, tokenNorm){
   return searchNorm === tokenNorm;
 }
 
-// F_2: Partial Token Match (Dùng cho GỢI Ý TÌM KIẾM, cho phép tìm kiếm một phần token)
 function partialNameMatches(searchNorm, tokenNorm){
   if(!searchNorm || !tokenNorm) return false;
   const sTokens = tokenizeForMatch(searchNorm);
   const tTokens = tokenizeForMatch(tokenNorm);
   if(sTokens.length===0) return false;
-  // Kiểm tra tất cả token trong chuỗi tìm kiếm (sTokens) phải có mặt trong chuỗi đích (tTokens)
   return sTokens.every(st=>{
     return tTokens.some(tt => tt === st);
   });
 }
 
-/* --- SEARCH (ĐÃ CẬP NHẬT: Dùng partialNameMatches) --- */
+/* --- SEARCH (Không đổi) --- */
 function renderSuggestions(q){
   const box=c("suggestions");
   if(!q||!flightData.length){box.classList.add("hidden");return;}
@@ -584,7 +598,6 @@ function renderSuggestions(q){
   flightData.forEach(d=>{
     if(d.nameNormalized && !map.has(d.nameNormalized)) map.set(d.nameNormalized, d.nameOnly);
   });
-  // Sử dụng partialNameMatches cho GỢI Ý
   const matches=[...map.entries()].filter(([norm])=>{
     return partialNameMatches(qNorm, norm);
   }).map(([norm,disp])=>({norm,disp}));
@@ -602,14 +615,13 @@ function renderSuggestions(q){
   });
 }
 
-/* --- renderFlightResults (ĐÃ CẬP NHẬT: Dùng exactNameMatches) --- */
+/* --- renderFlightResults (Không đổi) --- */
 function renderFlightResults(nameRaw){
   const container=c("flight-result");
   if(!flightData.length){
     container.innerHTML=`<p class="text-center text-gray-500 italic">Chưa có dữ liệu. Hãy tải file Excel.</p>`;return;
   }
   const qNorm=normalizeText(nameRaw);
-  // Sử dụng exactNameMatches cho KẾT QUẢ CUỐI
   let matches=flightData.filter(d=>exactNameMatches(qNorm, d.nameNormalized));
   if(!matches.length){container.innerHTML=`<p class="text-center text-gray-500 italic">Không tìm thấy dữ liệu cho "${nameRaw}"</p>`;return;}
   const unique=new Map();
@@ -663,72 +675,114 @@ function renderFlightResults(nameRaw){
 }
 
 /* ========================================================
-   TÍNH NĂNG "LÀM HỘ" - CHECK AVAILABILITY RANGE (ĐÃ CẬP NHẬT: Dùng exactNameMatches)
+   TÍNH NĂNG "LÀM HỘ" - CHECK AVAILABILITY RANGE (CẬP NHẬT MỚI)
    ======================================================== */
-const team7c = ["HẢI 9", "HUY 14", "DŨNG 12", "KHẢI 2", "HUY 12", "HẰNG 14", "HUYỀN 15", "LY 5", "THU 9", "LẬP 2"];
-const teamPR = ["NGHĨA 1", "TRÂM 3", "HOÀNG 10", "HUY 11", "THÚY 7", "ANH 10", "TUẤN 11", "LY 2", "SƠN 12", "KHÁNH 2"];
+const teamSUP = ["TUYỀN 1", "HIỂN 1", "BÌNH 1", "ANH 22", "NGỌC 5", "ĐIỆP 3", "ĐƯỢC 1", "YẾN 5"];
+const teamGATE = ["CHUNG 1", "PHƯƠNG 6", "NGỌC 5", "THANH 6", "YẾN 8", "BÍCH 1", "THỦY 3"];
+
+// Mapping input values to index
+const dayMap = {"mon":0, "tue":1, "wed":2, "thu":3, "fri":4, "sat":5, "sun":6};
+const dayKeys = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]; // Match Excel keys
 
 function checkHelp(){
-    const fromH = parseFloat(c('help-from').value);
-    const toH = parseFloat(c('help-to').value);
-    const daySelect = c('help-day').value; 
-    const use7c = c('chk-7c').checked;
-    const usePR = c('chk-pr').checked;
+    const fromH = parseFloat(c('help-from-h').value);
+    const fromDayStr = c('help-from-day').value;
+    const toH = parseFloat(c('help-to-h').value);
+    const toDayStr = c('help-to-day').value;
+    
+    const useSup = c('chk-sup').checked;
+    const useGate = c('chk-gate').checked;
+    
     const resultList = c('help-list');
     const resultBox = c('help-result');
 
     if(isNaN(fromH) || isNaN(toH)){
-        showToast("Vui lòng nhập giờ đầy đủ (VD: 11 và 18.5)");
-        return;
-    }
-    if(fromH >= toH){
-        showToast("Giờ kết thúc phải lớn hơn giờ bắt đầu!");
+        showToast("Vui lòng nhập giờ đầy đủ!");
         return;
     }
     if(!employeeData.length){
         showToast("Chưa có dữ liệu. Vui lòng tải Excel trước.");
         return;
     }
-    if(!use7c && !usePR){
-        showToast("Chọn ít nhất 1 team!");
-        return;
+
+    // Logic xác định danh sách cần tìm
+    let targetNames = [];
+    let isFilter = false;
+
+    // Nếu không tích gì -> Tìm tất cả (mặc định)
+    // Nếu tích Gate -> Gate + Sup
+    // Nếu tích Sup -> Sup
+    
+    if(useGate || useSup) {
+        isFilter = true;
+        if(useSup) targetNames = [...targetNames, ...teamSUP];
+        if(useGate) targetNames = [...targetNames, ...teamGATE, ...teamSUP]; // SUP làm được Gate
+        // Remove duplicates
+        targetNames = [...new Set(targetNames)];
     }
 
-    let targetNames = [];
-    if(use7c) targetNames = [...targetNames, ...team7c];
-    if(usePR) targetNames = [...targetNames, ...teamPR];
-
     let freeList = [];
+    const sourceList = isFilter ? targetNames : employeeData.map(e => e.name);
 
-    targetNames.forEach(rawName => {
+    // Xử lý khoảng thời gian (có thể qua ngày)
+    const d1 = dayMap[fromDayStr];
+    const d2 = dayMap[toDayStr];
+    
+    // Đơn giản hóa: Chúng ta kiểm tra sự bận rộn trên từng khúc thời gian.
+    // Segment 1: Ngày bắt đầu, từ fromH -> 24h (nếu khác ngày) hoặc đến toH (nếu cùng ngày)
+    // Segment 2: Ngày kết thúc (nếu khác ngày), từ 0 -> toH
+    
+    sourceList.forEach(rawName => {
+        // Tìm nhân viên trong dữ liệu Excel
         const normSearch = normalizeText(rawName);
-        // Sử dụng exactNameMatches để so khớp chính xác tên team với bảng chấm công
         const emp = employeeData.find(e => exactNameMatches(normSearch, normalizeText(e.name)));
         
         if(!emp){
-            freeList.push({name: rawName, reason: "Không có trong bảng CC"});
-            return;
+            // Nếu lọc theo Team mà không thấy tên trong bảng CC -> Bỏ qua hoặc báo lỗi
+            return; 
         }
 
-        const shiftStr = emp[daySelect];
-        if(!shiftStr){
-            freeList.push({name: rawName, reason: "OFF"});
-            return;
-        }
-        
-        const parts = shiftStr.split(";").map(x=>x.trim()).filter(Boolean);
         let isBusy = false;
-        
-        for(let p of parts){
-            const s = parseShift(p);
-            if(s && !s.error && s.dur>0){ 
-                const overlap = Math.max(fromH, s.start) < Math.min(toH, s.end);
-                if(overlap) isBusy = true;
+        let busyReason = "";
+
+        // Check Segment 1
+        const shift1 = emp[dayKeys[d1]];
+        if(shift1) {
+            const endH1 = (d1 === d2) ? toH : 24; // Nếu cùng ngày thì kết thúc lúc toH, khác ngày thì check đến hết ngày
+            const parts = shift1.split(";").map(x=>x.trim()).filter(Boolean);
+            for(let p of parts){
+                const s = parseShift(p);
+                if(s && !s.error && s.dur>0){
+                     // Overlap logic: StartA < EndB && EndA > StartB
+                    const overlap = Math.max(fromH, s.start) < Math.min(endH1, s.end);
+                    if(overlap) { isBusy = true; busyReason = `${dayKeys[d1].toUpperCase()}: ${p}`; break; }
+                }
             }
         }
 
+        // Check Segment 2 (Nếu qua ngày khác)
+        if(!isBusy && d1 !== d2){
+            const shift2 = emp[dayKeys[d2]];
+            if(shift2){
+                const startH2 = 0;
+                const parts = shift2.split(";").map(x=>x.trim()).filter(Boolean);
+                for(let p of parts){
+                    const s = parseShift(p);
+                    if(s && !s.error && s.dur>0){
+                        const overlap = Math.max(startH2, s.start) < Math.min(toH, s.end);
+                        if(overlap) { isBusy = true; busyReason = `${dayKeys[d2].toUpperCase()}: ${p}`; break; }
+                    }
+                }
+            }
+        }
+        
+        // Logic phụ: Nếu user nhập ngày lung tung (VD: T2 -> T5), code này coi như chỉ check T2 và T5.
+        // Nhưng yêu cầu thực tế thường chỉ là qua đêm hôm sau.
+
         if(!isBusy){
-            freeList.push({name: rawName, reason: shiftStr});
+            // Lấy ca của ngày bắt đầu để hiển thị cho dễ theo dõi
+            const displayShift = emp[dayKeys[d1]] || "OFF";
+            freeList.push({name: emp.name, reason: displayShift});
         }
     });
 
