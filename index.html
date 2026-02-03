@@ -3,821 +3,464 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>LỊCH CỐNG HIẾN HGS - Xanh nhạt</title>
+  <title>LỊCH CỐNG HIẾN HGS - NỘI ĐỊA</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
+  
   <style>
-    body { font-family: 'Inter', sans-serif; background: #eef4fb; color: #1f2937; }
-    .card { background: #ffffff; border-radius: 1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-    .toast {
-      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      background: rgba(59,130,246,0.95); color: white; padding: 10px 18px;
-      border-radius: 10px; font-weight: 600; z-index: 9999; animation: fadeInOut 2s forwards;
+    html { font-size: 16px; } 
+    body { 
+      font-family: 'Plus Jakarta Sans', sans-serif; 
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); 
+      color: #1e293b; 
+      min-height: 100vh;
     }
-    @keyframes fadeInOut {
-      0% { opacity: 0; transform: translate(-50%, -55%); }
-      10%, 90% { opacity: 1; transform: translate(-50%, -50%); }
-      100% { opacity: 0; transform: translate(-50%, -45%); }
+    .glass-card { 
+      background: rgba(255, 255, 255, 0.95); 
+      border-radius: 1.25rem; 
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.5);
     }
-    #suggestions { z-index: 50; }
-    table.result-table th, table.result-table td {
-      padding: 8px 6px; border-bottom: 1px solid #e5e7eb; font-size: 13px; text-align:left; vertical-align: middle;
+    .section-title {
+      display: flex; align-items: center; gap: 8px; font-weight: 700; color: #1e40af;
+      margin-bottom: 1rem; border-left: 4px solid #3b82f6; padding-left: 12px;
     }
-    table.result-table td.center { text-align:center; }
-    .day-container { background: white; border: 1px solid #dbeafe; border-radius: 10px; padding: 10px 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
-    .day-title { font-weight: 700; font-size: 15px; padding: 4px 0; color: #2563eb; }
-    .day-past { opacity: 0.6; background: #f8fafc; }
-    .day-today { border: 2px solid #3b82f6; box-shadow: 0 0 10px rgba(59,130,246,0.15); }
-    .btn-main { background: #3b82f6; color: white; border-radius: 8px; padding: 10px 0; font-weight: 600; width: 100%; }
-    .btn-main:hover { background: #2563eb; }
-    .btn-danger { background: #ef4444; color: white; border-radius: 8px; padding: 10px 0; font-weight: 600; width: 100%; }
-    .btn-yellow { background: #facc15; color: #1f2937; border-radius: 8px; padding: 10px 0; font-weight: 600; width: 100%; }
+    .btn-action { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+    .btn-action:active { transform: scale(0.97); }
     
-    .checkbox-wrapper { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
-    .checkbox-wrapper input { width: 16px; height: 16px; }
+    .toast {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      background: #1e293b; color: white; padding: 12px 24px;
+      border-radius: 99px; font-weight: 600; z-index: 9999; animation: slideDownUp 2.5s forwards;
+    }
+    @keyframes slideDownUp {
+      0% { opacity: 0; transform: translate(-50%, -20px); }
+      15%, 85% { opacity: 1; transform: translate(-50%, 0); }
+      100% { opacity: 0; transform: translate(-50%, -20px); }
+    }
+    
+    .day-container { border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px; background: white; }
+    .staff-sub-table td { padding: 6px 10px !important; font-size: 0.85rem; }
+
+    /* Accordion Arrow */
+    .arrow-icon { transition: transform 0.3s ease; }
+    .details-open .arrow-icon { transform: rotate(180deg); }
+    .details-content { display: none; }
+    .details-open .details-content { display: block; }
+
+    /* Input file custom */
+    .file-input-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+        width: 100%;
+    }
+    .file-input-wrapper input[type=file] {
+        position: absolute;
+        left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;
+    }
   </style>
 </head>
 
-<body class="p-3">
-  <div class="max-w-lg mx-auto card p-4 space-y-4">
-    <div class="text-center">
-      <h1 class="text-xl font-bold text-blue-600">📅 LỊCH "CỐNG HIẾN NĐ" HGS(Nội Địa)</h1>
-      <p class="text-sm text-gray-500 mt-1">
-        Nhập ca như: S; X; A; HC; 1X; 1-X; X1; X-1; 0.5X-1; H; DH; M...
-      </p>
-    </div>
+<body class="p-4 md:p-8">
+  <div class="max-w-2xl mx-auto space-y-6">
+    
+    <header class="text-center space-y-2">
+      <h2 class="text-2xl font-black text-blue-800 tracking-tight uppercase">
+        📅 LỊCH "CỐNG HIẾN" NỘI ĐỊA
+      </h2>
+      <p class="text-[11px] font-bold text-slate-500 italic px-4">"Dữ liệu phục vụ tra cứu nhanh - Hãy bám sát lịch cán bộ gửi"</p>
+    </header>
 
-    <div class="space-y-2">
-      <input id="week-name" type="text" placeholder="Tên tuần (VD: Tuần 44 - Tháng 10)"
-             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400">
-      <div class="flex gap-2 flex-wrap">
-        <button id="save-week" class="flex-1 btn-main">💾 Lưu tuần</button>
-        <select id="week-select" class="flex-1 border border-gray-300 rounded-lg text-sm px-2 py-2">
-          <option value="">Chọn tuần</option>
-        </select>
+    <div class="glass-card p-5">
+      <div class="section-title">👤 Lịch cá nhân của bạn</div>
+      <div class="mb-4">
+          <select id="employee-select" class="w-full border border-blue-200 rounded-xl text-base px-4 py-3 bg-blue-50 font-bold text-blue-900 outline-none focus:ring-2 focus:ring-blue-400 appearance-none">
+              <option value="">-- Chọn tên từ danh sách --</option>
+          </select>
       </div>
-
-      <div class="space-y-2">
-        <input type="file" id="excel-upload" accept=".xls,.xlsx"
-               class="w-full border border-gray-300 rounded-lg text-sm px-3 py-2">
-        <p class="text-xs text-gray-500 mt-1">
-          (Để xem lịch và chuyến bay của tất cả mọi người, hãy tải file Excel và upload lên web, cách tải file Excel tại <a href="https://www.thegioididong.com/tin-tuc/cach-tai-file-google-sheets-ve-dien-thoai-1417179?gidzl=FVum457VWrqou3WJKCA0M3BaFnT8m84AA-Cx5qx1W5akucaO7CU117lcEanEmeK1V-Dh6sPK4OfvMDQAK0" target="_blank" class="text-red-500 underline font-medium">đây</a>)
-        </p>
-        <select id="employee-select"
-                class="w-full border border-gray-300 rounded-lg text-sm px-3 py-2">
-          <option value="">-- Chọn nhân viên --</option>
-        </select>
+      <div id="days-container" class="grid grid-cols-1 gap-2"></div>
+      <div class="grid grid-cols-2 gap-3 mt-4">
+        <button id="calc-week" class="btn-action bg-blue-600 text-white rounded-xl py-4 font-bold shadow-lg">📅 TÍNH GIỜ</button>
+        <button id="clear-ui" class="btn-action bg-slate-400 text-white rounded-xl py-4 font-bold shadow-lg">🧹 XÓA TRẮNG</button>
       </div>
     </div>
 
-    <div id="days-container" class="space-y-3"></div>
-
-    <div class="grid grid-cols-1 gap-2">
-      <button id="calc-week" class="btn-main">📅 Tính lịch tuần</button>
-      <button id="clear-week" class="btn-yellow">🧹 Xóa tuần này</button>
-      <button id="clear-all" class="btn-danger">🗑 Xóa tất cả</button>
-    </div>
-
-    <div id="result-container" class="hidden">
-      <div class="overflow-x-auto mt-3 rounded-lg border border-gray-200">
-        <table class="w-full text-sm text-gray-700">
-          <thead class="bg-blue-100">
+    <div id="result-container" class="hidden glass-card p-5">
+      <div class="section-title">📊 Tổng hợp tuần</div>
+      <div class="overflow-hidden rounded-xl border border-slate-100">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-800 text-white">
             <tr>
-              <th class="px-2 py-1 text-left">Thứ</th>
-              <th class="px-2 py-1 text-left">Ca</th>
-              <th class="px-2 py-1 text-center">Giờ vào</th>
-              <th class="px-2 py-1 text-center">Giờ ra</th>
-              <th class="px-2 py-1 text-center">Tổng</th>
+              <th class="px-3 py-3 text-left">Thứ</th>
+              <th class="px-3 py-3 text-left">Ca</th>
+              <th class="px-3 py-3 text-center">Vào</th>
+              <th class="px-3 py-3 text-center">Ra</th>
+              <th class="px-3 py-3 text-center">Tổng</th>
             </tr>
           </thead>
-          <tbody id="result-body"></tbody>
+          <tbody id="result-body" class="divide-y divide-slate-100 bg-white"></tbody>
         </table>
       </div>
-      <p id="tribute" class="text-center font-bold text-blue-600 mt-2 hidden">
-        💪 BẠN ĐÃ CỐNG HIẾN HẾT MÌNH CẢ TUẦN!
-      </p>
     </div>
 
-    <a href="https://www.facebook.com/huy.hai.333030" target="_blank"
-      class="text-center mt-3 font-semibold text-blue-600 text-sm bg-blue-50 py-2 rounded-lg shadow-sm block no-underline">
-      ✨ Created by Hải 9 ✨
-    </a>
+    <div class="glass-card p-5 border-t-4 border-t-indigo-500">
+      <div class="section-title text-indigo-700">🔍 Chuyến bay & Đồng đội</div>
+      <div class="relative mb-4">
+        <input id="search-name" type="text" placeholder="Nhập tên nhân viên tra cứu..."
+               class="w-full border border-slate-200 rounded-xl px-4 py-3 pl-10 text-base focus:ring-2 focus:ring-indigo-400 outline-none shadow-sm font-semibold">
+        <span class="absolute left-3 top-4 opacity-40">👤</span>
+        <div id="suggestions" class="absolute w-full bg-white border border-slate-200 rounded-xl shadow-xl mt-1 hidden z-50 max-h-60 overflow-y-auto"></div>
+      </div>
+      <div id="flight-result-area" class="space-y-3"></div>
+    </div>
 
-    <div class="border-t pt-4 mt-4">
-      <h2 class="text-lg font-semibold text-blue-600 text-center mb-2">
-        🔍 Tra cứu chuyến bay
-      </h2>
-      <p class="text-xs text-center text-red-500 mb-2 italic">
-        "Link này chỉ có mục đích tham khảo, File cán bộ gửi vẫn luôn là chuẩn nhất"
-      </p>
-      <div class="space-y-2">
-        <input id="search-name" type="text" placeholder="Nhập tên nhân viên (VD: HẢI 9 hoặc Hai 9)"
-               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-blue-400"
-               autocomplete="off">
-        <div id="suggestions"
-             class="bg-white border border-gray-200 rounded-lg shadow hidden max-h-40 overflow-y-auto"></div>
-        <div id="flight-result" class="mt-3 text-sm"></div>
+    <div class="glass-card p-5 border-t-4 border-t-emerald-500">
+      <div class="section-title text-emerald-700">🤝 Tìm người làm hộ</div>
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+          <p class="text-[10px] font-bold text-emerald-600 uppercase">Từ lúc (Thứ/Giờ)</p>
+          <div class="flex gap-1">
+            <select id="help-from-day" class="flex-1 bg-transparent text-sm font-bold outline-none"></select>
+            <input id="help-from-h" type="number" step="0.5" placeholder="0.0" class="w-12 text-center border-b border-emerald-300 font-bold text-emerald-800">
+          </div>
+        </div>
+        <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+          <p class="text-[10px] font-bold text-emerald-600 uppercase">Đến lúc (Thứ/Giờ)</p>
+          <div class="flex gap-1">
+            <select id="help-to-day" class="flex-1 bg-transparent text-sm font-bold outline-none"></select>
+            <input id="help-to-h" type="number" step="0.5" placeholder="0.0" class="w-12 text-center border-b border-emerald-300 font-bold text-emerald-800">
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-center gap-4 mb-4">
+          <label class="flex items-center gap-1.5 text-sm font-bold text-blue-700 cursor-pointer"><input type="checkbox" id="chk-sup" class="w-4 h-4"> Team SUP</label>
+          <label class="flex items-center gap-1.5 text-sm font-bold text-orange-700 cursor-pointer"><input type="checkbox" id="chk-gate" class="w-4 h-4"> Team GATE</label>
+      </div>
+      <button id="btn-find-help" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-emerald-700">🔍 TÌM KIẾM NGAY</button>
+      <div id="help-result-box" class="hidden mt-3 p-3 bg-white rounded-xl border border-emerald-200 max-h-52 overflow-y-auto">
+          <ul id="help-list" class="grid grid-cols-1 gap-1.5"></ul>
       </div>
     </div>
 
-    <div class="border-t-2 border-blue-100 pt-5 mt-6 bg-white rounded-xl p-3 shadow-sm">
-      <h2 class="text-lg font-bold text-green-600 text-center mb-1">
-        🤝 LÀM HỘ
-      </h2>
-      <p class="text-xs text-center text-gray-500 mb-3">
-        Tìm người rảnh (không vướng ca) trong khoảng giờ bạn nhập
-      </p>
-      
-      <div class="space-y-3">
-        <div class="flex gap-2 items-end">
-            <div class="w-1/3">
-                <label class="block text-xs font-semibold mb-1 text-blue-700">TỪ LÚC:</label>
-                <input id="help-from-h" type="number" step="0.5" placeholder="11" 
-                       class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+    <div class="glass-card p-6 bg-slate-100 border-2 border-slate-200">
+        <div class="section-title text-slate-700">⚙️ CÀI ĐẶT & DỮ LIỆU</div>
+        <p class="text-[11px] text-slate-500 mb-4 font-medium italic">Vui lòng tải file Excel lịch làm việc mới nhất tại đây:</p>
+        
+        <div class="space-y-4">
+            <div class="file-input-wrapper">
+                <button class="w-full bg-white border-2 border-dashed border-blue-400 text-blue-600 font-bold py-4 rounded-xl hover:bg-blue-50 transition-colors">
+                    📁 CHỌN FILE EXCEL LỊCH MỚI
+                </button>
+                <input type="file" id="excel-upload" accept=".xls,.xlsx">
             </div>
-            <div class="w-2/3">
-                <select id="help-from-day" class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
-                    <option value="mon">Thứ Hai</option>
-                    <option value="tue">Thứ Ba</option>
-                    <option value="wed">Thứ Tư</option>
-                    <option value="thu">Thứ Năm</option>
-                    <option value="fri">Thứ Sáu</option>
-                    <option value="sat">Thứ Bảy</option>
-                    <option value="sun">Chủ Nhật</option>
+
+            <div class="flex gap-2">
+                <input id="week-name" type="text" placeholder="Tên tuần (VD: Tuần 05)" class="flex-1 border border-slate-300 p-3 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-400">
+                <button id="save-week-btn" class="bg-blue-500 text-white px-4 py-3 rounded-xl text-xs font-bold shadow-sm">LƯU LỊCH</button>
+            </div>
+
+            <div class="flex items-center justify-between gap-4 pt-2">
+                <select id="week-select" class="flex-1 border border-slate-300 p-3 rounded-xl text-sm bg-white">
+                    <option value="">-- Xem lịch tuần cũ --</option>
                 </select>
+                <button id="clear-all-data" class="text-red-500 text-[11px] font-bold hover:underline">XÓA HẾT DỮ LIỆU</button>
             </div>
         </div>
-
-        <div class="flex gap-2 items-end">
-            <div class="w-1/3">
-                <label class="block text-xs font-semibold mb-1 text-red-700">ĐẾN LÚC:</label>
-                <input id="help-to-h" type="number" step="0.5" placeholder="18.5" 
-                       class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
-            </div>
-            <div class="w-2/3">
-                <select id="help-to-day" class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
-                    <option value="mon">Thứ Hai</option>
-                    <option value="tue">Thứ Ba</option>
-                    <option value="wed">Thứ Tư</option>
-                    <option value="thu">Thứ Năm</option>
-                    <option value="fri">Thứ Sáu</option>
-                    <option value="sat">Thứ Bảy</option>
-                    <option value="sun">Chủ Nhật</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="flex justify-center gap-6 py-2 bg-gray-50 rounded-lg">
-            <label class="checkbox-wrapper">
-                <input type="checkbox" id="chk-sup">
-                <span class="text-sm font-bold text-purple-700">Team SUP</span>
-            </label>
-            <label class="checkbox-wrapper">
-                <input type="checkbox" id="chk-gate">
-                <span class="text-sm font-bold text-orange-700">Team GATE</span>
-            </label>
-        </div>
-
-        <button id="btn-find-help" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded-lg shadow transition-colors">
-            🔍 Tìm người rảnh
-        </button>
-
-        <div id="help-result" class="hidden mt-3 bg-green-50 p-3 rounded-lg border border-green-200">
-            <p class="font-bold text-green-700 text-sm mb-2 border-b border-green-200 pb-1">KẾT QUẢ:</p>
-            <ul id="help-list" class="list-disc list-inside text-sm text-gray-700 space-y-1"></ul>
-        </div>
-      </div>
-    </div>
     </div>
 
-  <div id="toast"></div>
-<script>
-/* ======== KHỞI TẠO INPUT CHO CÁC THỨ (Không đổi) ======== */
-document.addEventListener("DOMContentLoaded", () => {
-  const days = ["Thứ Hai","Thứ Ba","Thứ Tư","Thứ Năm","Thứ Sáu","Thứ Bảy","Chủ Nhật"];
-  const box = document.getElementById("days-container");
-  box.innerHTML = "";
-  days.forEach((d,i)=>{
-    const wrapper = document.createElement('div');
-    wrapper.innerHTML = `
-      <label class="block text-sm font-semibold text-gray-700 mb-1">${d}</label>
-      <input id="day${i}" type="text" placeholder="VD: S; X; A; HC; 1X; X-1"
-      class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400">
-    `;
-    box.appendChild(wrapper);
-  });
-});
-</script>
+    <footer class="text-center py-6">
+        <a href="https://www.facebook.com/huy.hai.333030" target="_blank" class="inline-block bg-white px-4 py-2 rounded-full shadow-sm border text-sm font-bold text-blue-600 hover:shadow-md transition-all">
+            ✨ Created by Hải 9 ✨
+        </a>
+    </footer>
+  </div>
 
 <script>
-/* ================= JAVASCRIPT CHÍNH ================= */
+/* --- BIẾN VÀ HÀM TIỆN ÍCH --- */
 const c = id => document.getElementById(id);
 const days = ["Thứ Hai","Thứ Ba","Thứ Tư","Thứ Năm","Thứ Sáu","Thứ Bảy","Chủ Nhật"];
 const daysOrder = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
-const EXCEL_STORAGE_KEY = 'hgs_last_excel_data_v3';
-const SEARCH_STORAGE_KEY = 'hgs_last_search_name_v3';
+const dayMap = {"mon":0, "tue":1, "wed":2, "thu":3, "fri":4, "sat":5, "sun":6};
+const EXCEL_KEY = 'hgs_nd_last_excel_v2';
+const teamSUP = ["TUYỀN 1", "HIỂN 1", "BÌNH 1", "ANH 22", "NGỌC 5", "ĐIỆP 3", "ĐƯỢC 1", "YẾN 5", "TÙNG 13"];
+const teamGATE = ["CHUNG 1", "PHƯƠNG 6", "NGỌC 5", "THANH 6", "YẾN 8", "BÍCH 1", "THỦY 3", "QUYÊN 11", "YẾN 5"];
 
 let employeeData = [];
 let flightData = [];
 
-const showToast = msg => {
-  const t = document.createElement('div');
-  t.className='toast';
-  t.textContent=msg;
-  document.body.appendChild(t);
-  setTimeout(()=>t.remove(),2000);
-};
-
-/* --------- CHUẨN HÓA CHUỖI (Không đổi) ---------- */
-function removeDiacritics(str){
-  if(!str) return "";
-  const s = str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  return s.replace(/đ/g,'d').replace(/Đ/g,'D');
-}
-function normalizeText(s){
-  if(!s) return "";
-  return removeDiacritics(s)
-    .replace(/[–—]/g,'-')
-    .replace(/\u00A0/g,' ')
-    .replace(/[^A-Z0-9\s\-]/gi,'')
-    .trim()
-    .replace(/\s+/g,' ')
-    .toUpperCase();
-}
-
-/* ---------- LƯU/TẢI TUẦN (Không đổi) ---------- */
-function createInputs(){
-  const box = c("days-container");
-  box.innerHTML = "";
-  days.forEach((d,i)=>{
-    const wrapper = document.createElement('div');
-    wrapper.innerHTML = `
-      <label class="block text-sm font-semibold text-gray-700 mb-1">${d}</label>
-      <input id="day${i}" type="text" placeholder="VD: S; X; A; HC; 1X; X-1"
-      class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400">
-    `;
-    box.appendChild(wrapper);
-  });
-}
-const keyWeek = n => "week_"+n;
-const loadWeeksList = ()=>JSON.parse(localStorage.getItem("weeks_list")||"[]");
-const saveWeeksList = arr=>localStorage.setItem("weeks_list", JSON.stringify(arr));
-
-function saveWeek(){
-  const n = c("week-name").value.trim();
-  if(!n){ showToast("Nhập tên tuần"); return; }
-  const data = {};
-  days.forEach((_,i)=> data["day"+i]=c("day"+i).value.trim());
-  localStorage.setItem(keyWeek(n), JSON.stringify(data));
-  let list = loadWeeksList();
-  if(!list.includes(n)){ list.push(n); saveWeeksList(list); fillWeekSelect(); }
-  showToast("Đã lưu tuần "+n);
-}
-function fillWeekSelect(){
-  const s = c("week-select"); if(!s) return;
-  const list = loadWeeksList();
-  s.innerHTML='<option value="">Chọn tuần</option>';
-  list.forEach(n=>{
-    const o=document.createElement('option');
-    o.value=n; o.textContent=n; s.appendChild(o);
-  });
-}
-function loadWeek(n){
-  const raw = localStorage.getItem(keyWeek(n));
-  if(!raw){ showToast("Tuần trống"); return; }
-  const d = JSON.parse(raw);
-  days.forEach((_,i)=> c("day"+i).value = d["day"+i]||"");
-  showToast("Đã tải "+n);
-}
-function deleteWeek(){
-  const n=c("week-name").value.trim();
-  if(!n) return showToast("Nhập tên tuần");
-  localStorage.removeItem(keyWeek(n));
-  let list = loadWeeksList().filter(x=>x!==n);
-  saveWeeksList(list); fillWeekSelect();
-  days.forEach((_,i)=> c("day"+i).value="");
-  showToast("Đã xóa tuần "+n);
-}
-function clearAll(){
-  if(!confirm("Xóa tất cả tuần?")) return;
-  loadWeeksList().forEach(n=>localStorage.removeItem(keyWeek(n)));
-  saveWeeksList([]); fillWeekSelect();
-  days.forEach((_,i)=> c("day"+i).value="");
-  showToast("Đã xóa tất cả");
-}
-
-/* ---------- TÍNH CA (Không đổi) ---------- */
-const shifts={
-  HC:{start:7.5,end:15.5},A:{start:22,end:30},X:{start:14,end:22},S:{start:6,end:14}
-};
-function parseShift(str){
-  str=(str||"").toUpperCase().trim();
-  if(!str) return null;
-  if(str==="OM"||str==="OFF") return {start:0,end:0,dur:0}; 
-
-  const re_fixed=/^(\d*\.?\d*-?)?(H|DH|M)(\d*\.?\d*)?(-?\d*\.?\d*)?$/; 
-  const m_fixed=re_fixed.exec(str);
-  if(m_fixed){
-      const [,pre,code,val,suf]=m_fixed;
-      let duration=8, start=8; 
-      
-      if(code==="DH"||code==="M"){
-          duration=parseFloat(val)||0;
-      } else if (code==="H"){
-          if(val){duration=parseFloat(val);}
-          if(/H4S/.test(str)) { start=8; duration=4; } 
-          else if(/H4C/.test(str)) { start=14; duration=4; }
-      }
-      
-      if(duration<=0) return {start:0,end:0,dur:0};
-      
-      let end=start+duration;
-      if(pre){ const v=parseFloat(pre.replace("-","")); pre.includes("-")?start+=v:start-=v; }
-      if(suf){ const v=parseFloat(suf.replace("-","")); suf.startsWith("-")?end-=v:end+=v; }
-
-      if(start>=end) end+=24;
-      return {start,end,dur:end-start};
-  }
-  
-  const re=/^(\d*\.?\d*-?)?([A-Z]{1,2})(-?\d*\.?\d*)?$/;
-  const m=re.exec(str);
-  if(!m) return {error:"Sai định dạng"};
-  const [,pre,code,suf]=m;
-  if(!shifts[code]) return {error:"Ca không tồn tại"};
-  let {start,end}=shifts[code];
-  if(pre){ const val=parseFloat(pre.replace("-","")); pre.includes("-")?start+=val:start-=val; }
-  if(suf){ const val=parseFloat(suf.replace("-","")); suf.startsWith("-")?end-=val:end+=val; }
-  if(start>=end) end+=24;
-  return {start,end,dur:end-start};
-}
-function fmtHoursToHHMM(t){
-  const hh=Math.floor(t%24);
-  const mm=Math.round((t%1)*60);
-  return String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0");
-}
-function calcWeek(){
-  const tbody=c("result-body"); if(!tbody) return;
-  tbody.innerHTML=""; let total=0,full=true;
-  days.forEach((d,i)=>{
-    const v=c("day"+i).value.trim();
-    if(!v){ tbody.innerHTML+=`<tr><td>${d}</td><td colspan=4 class="italic text-gray-400">Nghỉ</td></tr>`; full=false; return; }
-    let sum=0; const parts=v.split(";").map(x=>x.trim()).filter(Boolean);
-    parts.forEach((p,j)=>{
-      const r=parseShift(p);
-      if(r&&r.error){tbody.innerHTML+=`<tr><td>${j?"":d}</td><td>${p}</td><td colspan=3 class="text-red-600">${r.error}</td></tr>`;return;}
-      if(r){
-          if(r.dur===0 && (p==="OM"||p==="OFF")){
-              tbody.innerHTML+=`<tr><td>${j?"":d}</td><td>${p}</td><td colspan=3 class="italic text-gray-400">${p==="OM"?"Nghỉ ốm":"Nghỉ OFF"}</td></tr>`;
-          } else if(r.dur>0){
-              tbody.innerHTML+=`<tr><td>${j?"":d}</td><td>${p}</td><td>${fmtHoursToHHMM(r.start)}</td><td>${fmtHoursToHHMM(r.end)}</td><td>${r.dur.toFixed(1)}h</td></tr>`;
-              sum+=r.dur;
-          }
-      }
-    });
-    if(parts.length>1) tbody.innerHTML+=`<tr class="bg-blue-50 font-medium"><td></td><td colspan=3>Tổng ngày</td><td>${sum.toFixed(1)}h</td></td></tr>`;
-    total+=sum;
-  });
-  tbody.innerHTML+=`<tr class="bg-blue-100 font-bold"><td colspan=4>Tổng tuần</td><td>${total.toFixed(1)}h</td></tr>`;
-  c("result-container").classList.remove("hidden");
-  c("tribute").classList.toggle("hidden",!full);
-  showToast("Đã tính xong!");
-}
-
-/* ---------- EXCEL PARSE (Không đổi) ---------- */
-function combine(a,b){
-  const v1=(a||"").toString().trim();
-  const v2=(b||"").toString().trim();
-  let combined=[v1,v2].filter(Boolean).join(";");
-  if(!combined||combined.toUpperCase().includes("OFF")) combined="";
-  return combined;
-}
-
-function parseSheet(sheet,name){
-  const rows=XLSX.utils.sheet_to_json(sheet,{header:1});
-  if(rows.length<2) return [];
-  return rows.slice(1).map(row=>({
-    name:(row[1]||"").toString().trim(),
-    mon:combine(row[2],row[4]),
-    tue:combine(row[5],row[7]),
-    wed:combine(row[8],row[10]),
-    thu:combine(row[11],row[13]),
-    fri:combine(row[14],row[16]),
-    sat:combine(row[17],row[19]),
-    sun:combine(row[20],row[22]),
-    source:name
-  })).filter(e=>e.name);
-}
-
+function removeDiacritics(str){ return str ? str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g,'d').replace(/Đ/g,'D') : ""; }
+function normalizeText(s){ return s ? removeDiacritics(s).replace(/[^A-Z0-9\s\-]/gi,'').trim().replace(/\s+/g,' ').toUpperCase() : ""; }
 function excelTimeToHHMM(v){
-  if(v===undefined||v===null) return "";
-  if(typeof v==='string') return v.trim();
-  if(typeof v==='number'){
-    const frac=v-Math.floor(v);
-    const totalMinutes=Math.round(frac*24*60);
-    const H=Math.floor(totalMinutes/60);
-    const M=totalMinutes%60;
-    return String(H).padStart(2,'0')+':'+String(M).padStart(2,'0');
-  }
-  return String(v);
+    if(typeof v==='number'){ const total=Math.round(v*24*60); return String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0'); }
+    return String(v||"").trim();
 }
 
-/* --- parseFlightSheet (CẬP NHẬT CỘT MỚI) --- */
-function parseFlightSheet(sheet,sheetName){
-  const out=[];
-  // Update Row Range
-  const startRow=4, endRow=27; 
-  
-  // Update Columns: FLT(I), ETD(J), SUP(K), GATE(L), KETSO(M), WLC(N)
-  const fltCol='I'; const etdCol='J'; const gateCol='L'; 
-  
-  // Update Employee Data Range: K -> AA
-  const startCol=XLSX.utils.decode_col('K');
-  const endCol=XLSX.utils.decode_col('AA');
-
-  let lastFlt="",lastEtd="",lastGate="";
-  
-  const namePattern = /([\p{L}Đđ\s\-]+?)\s+(\d{1,4})/ug;
-
-  for(let r=startRow;r<=endRow;r++){
-    const fltCell=sheet[fltCol+r];
-    const etdCell=sheet[etdCol+r];
-    const gateCell=sheet[gateCol+r];
-
-    const fltValRaw=fltCell?(fltCell.v||'').toString().trim():'';
-    const etdValRaw=etdCell?etdCell.v:'';
-    const gateValRaw=gateCell?(gateCell.v||'').toString().trim():'';
-    const fltVal=fltValRaw||lastFlt;
-    const etdVal=etdValRaw!==undefined&&etdValRaw!==""?excelTimeToHHMM(etdValRaw):lastEtd;
-    const gateVal=gateValRaw||lastGate;
-    if(fltVal){lastFlt=fltVal;lastEtd=etdVal;lastGate=gateVal;}
-    if(!fltVal) continue;
-
-    for(let c=startCol;c<=endCol;c++){
-      const colLetter=XLSX.utils.encode_col(c);
-      const cell=sheet[colLetter+r];
-      if(!cell||!cell.v) continue;
-      let raw=String(cell.v).trim();
-      if(!raw) continue;
-      
-      const taskGroups = raw.split(/[;\n]+/).map(x=>x.trim()).filter(Boolean);
-      
-      // Update Column Flags based on Letters
-      const isSup=colLetter==='K', 
-            isGate=colLetter==='L',
-            isKetso=colLetter==='M',
-            isWlct=colLetter==='N';
-
-      taskGroups.forEach(groupStr => {
-        const upperGroup = groupStr.toUpperCase();
-        let tag = "";
-        const hasBD = /\b(BRD|BD)\b/.test(upperGroup);
-        const hasKO = /\b(KO|K)\s*(BRD|BD)\b/.test(upperGroup);
-        if (hasKO) tag = "NO";
-        else if (hasBD) tag = "BRD";
-
-        const notes = [];
-        if(/\bK[EÊ]M\s*QUẦY\b/.test(upperGroup)) notes.push("KÈM QUẦY");
-
-        const matches = [...groupStr.matchAll(namePattern)];
-        matches.forEach(m => {
-          const nameOnly = `${m[1].trim()} ${m[2].trim()}`.toUpperCase();
-          const normalizedName = normalizeText(nameOnly);
-          out.push({
-            sheet:sheetName,row:r,col:colLetter,tokenRaw:groupStr,
-            nameOnly:nameOnly,nameNormalized:normalizedName,
-            tag:tag,
-            notes:notes,
-            flt:fltVal,etd:etdVal,gate:gateVal,
-            supFlag:isSup,gateFlag:isGate,ketsoFlag:isKetso,wlctFlag:isWlct,
-            uniqueKey:`${sheetName}-${fltVal}-${etdVal}-${gateVal}-${normalizedName}-${colLetter}-${r}`
-          });
-        });
-      });
+/* --- PHÂN TÍCH CA LÀM VIỆC --- */
+const shifts={ HC:{start:7.5,end:15.5},A:{start:22,end:30},X:{start:14,end:22},S:{start:6,end:14} };
+function parseShift(str){
+    str=(str||"").toUpperCase().trim(); if(!str || str==="OFF" || str==="OM") return {start:0,end:0,dur:0};
+    const re_f=/^(\d*\.?\d*-?)?(H|DH|M)(\d*\.?\d*)?(-?\d*\.?\d*)?$/; const m_f = re_f.exec(str);
+    if(m_f){
+        let d=8, s=8; if(m_f[2]==="DH"||m_f[2]==="M") d=parseFloat(m_f[3])||0;
+        else if(m_f[2]==="H"){ if(m_f[3]) d=parseFloat(m_f[3]); if(/H4S/.test(str)) {s=8;d=4;} else if(/H4C/.test(str)){s=14;d=4;} }
+        let e=s+d; if(m_f[1]){ const v=parseFloat(m_f[1].replace("-","")); m_f[1].includes("-")?s+=v:s-=v; }
+        if(m_f[4]){ const v=parseFloat(m_f[4].replace("-","")); m_f[4].startsWith("-")?e-=v:e+=v; }
+        return {start:s, end:e, dur: e-s};
     }
-  }
-  return out;
+    const re=/^(\d*\.?\d*-?)?([A-Z]{1,2})(-?\d*\.?\d*)?$/; const m=re.exec(str);
+    if(!m || !shifts[m[2]]) return {start:8, end:16, dur:8};
+    let {start,end}=shifts[m[2]]; if(m[1]){ const v=parseFloat(m[1].replace("-","")); m[1].includes("-")?start+=v:start-=v; }
+    if(m[3]){ const v=parseFloat(m[3].replace("-","")); m[3].startsWith("-")?end-=v:end+=v; }
+    return {start, end, dur: end-start};
 }
+function fmtHoursToHHMM(t){ const hh=Math.floor(t%24); const mm=Math.round((t%1)*60); return String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0"); }
 
-/* --- Đọc file Excel & gộp dữ liệu (Không đổi) --- */
-function processExcelData(data){
-  const wb=XLSX.read(data,{type:"array"});
-  const target=["bảng chấm công qt","bảng chấm công nđ"];
-  let allEmp=[];
-  target.forEach(t=>{
-    const sn=wb.SheetNames.find(n=>n.trim().toLowerCase()===t);
-    if(sn){const s=wb.Sheets[sn];allEmp=allEmp.concat(parseSheet(s,sn));}
-  });
-  employeeData=allEmp;
-  const sel=c("employee-select");
-  sel.innerHTML='<option value="">-- Chọn nhân viên --</option>';
-  employeeData.sort((a,b)=>a.name.localeCompare(b.name,"vi",{sensitivity:"base"}))
-    .forEach(e=>{
-      const o=document.createElement('option');
-      o.value=e.name;o.textContent=e.name+" ("+e.source.toUpperCase().replace("BẢNG CHẤM CÔNG ","")+")";
-      sel.appendChild(o);
+/* --- LOGIC XỬ LÝ EXCEL NỘI ĐỊA --- */
+function processExcel(data){
+    const wb = XLSX.read(data, {type:"array"});
+    let allEmp = [];
+    ["bảng chấm công qt","bảng chấm công nđ"].forEach(t => {
+        const sn = wb.SheetNames.find(n => n.trim().toLowerCase() === t);
+        if(sn){
+            const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], {header:1});
+            rows.slice(1).forEach(row => {
+                if(row[1]) allEmp.push({
+                    name: String(row[1]).trim(),
+                    source: t,
+                    mon: (row[2]||"")+(row[4]?';'+row[4]:""), tue: (row[5]||"")+(row[7]?';'+row[7]:""),
+                    wed: (row[8]||"")+(row[10]?';'+row[10]:""), thu: (row[11]||"")+(row[13]?';'+row[13]:""),
+                    fri: (row[14]||"")+(row[16]?';'+row[16]:""), sat: (row[17]||"")+(row[19]?';'+row[19]:""),
+                    sun: (row[20]||"")+(row[22]?';'+row[22]:"")
+                });
+            });
+        }
     });
-  flightData=[];
-  daysOrder.forEach(d=>{
-    const sn=wb.SheetNames.find(n=>n.trim().toUpperCase()===d);
-    if(sn){const s=wb.Sheets[sn];flightData=flightData.concat(parseFlightSheet(s,d));}
-  });
-  return true;
+    employeeData = allEmp;
+
+    let allFlt = [];
+    const namePattern = /([\p{L}Đđ\s\-]+?)\s+(\d{1,4})/ug;
+    daysOrder.forEach(dName => {
+        const sn = wb.SheetNames.find(n => n.trim().toUpperCase() === dName);
+        if(!sn) return;
+        const sheet = wb.Sheets[sn];
+        let lastFlt="", lastEtd="", lastGate="";
+        // Quét nội địa: Hàng 4-27, Cột I, J, L
+        for(let r=4; r<=27; r++){
+            const fV=sheet['I'+r]?sheet['I'+r].v:null, eV=sheet['J'+r]?sheet['J'+r].v:null, gV=sheet['L'+r]?sheet['L'+r].v:null;
+            const flt=fV?String(fV).trim():lastFlt, etd=eV!==undefined?excelTimeToHHMM(eV):lastEtd, gate=gV?String(gV).trim():lastGate;
+            if(!flt) continue; lastFlt=flt; lastEtd=etd; lastGate=gate;
+
+            for(let cIdx=10; cIdx<=26; cIdx++){
+                const cell = sheet[XLSX.utils.encode_col(cIdx)+r];
+                if(cell && cell.v){
+                    const matches = [...String(cell.v).matchAll(namePattern)];
+                    const colLet = XLSX.utils.encode_col(cIdx);
+                    matches.forEach(m => {
+                        const nameRaw = (m[1].trim()+' '+m[2].trim()).toUpperCase();
+                        allFlt.push({
+                            sheet: dName, flt, etd, gate, 
+                            nameOnly: nameRaw,
+                            nameNormalized: normalizeText(nameRaw),
+                            isSup: colLet==='K', isGate: colLet==='L', isKetso: colLet==='M', isWlc: colLet==='N'
+                        });
+                    });
+                }
+            }
+        }
+    });
+    flightData = allFlt;
+    updateEmployeeDropdown();
+    showToast("✅ Đã xử lý lịch mới!");
 }
 
-/* --- File Upload (Không đổi) --- */
-c("excel-upload").addEventListener("change",e=>{
-  const f=e.target.files[0];if(!f) return;
-  const r=new FileReader();
-  r.onload=evt=>{
-    const data=new Uint8Array(evt.target.result);
-    const binary=data.reduce((a,i)=>a+String.fromCharCode(i),"");
-    const base64=btoa(binary);
-    localStorage.setItem(EXCEL_STORAGE_KEY,base64);
-    processExcelData(data);
-    showToast("✅ Đã tải file Excel");
-  };
-  r.readAsArrayBuffer(f);
-});
-
-/* --- Tải lại file lưu (Không đổi) --- */
-function loadLastExcelData(){
-  const base64=localStorage.getItem(EXCEL_STORAGE_KEY);
-  if(!base64) return false;
-  try{
-    const binary=atob(base64);
-    const arr=new Uint8Array(binary.length);
-    for(let i=0;i<binary.length;i++) arr[i]=binary.charCodeAt(i);
-    processExcelData(arr);
-    showToast("Đã tải dữ liệu từ bộ nhớ");
-    return true;
-  }catch(e){console.error(e);localStorage.removeItem(EXCEL_STORAGE_KEY);return false;}
-}
-
-/* --- employee-select (Không đổi) --- */
-c("employee-select").addEventListener("change",e=>{
-  const name=e.target.value;if(!name) return;
-  const emp=employeeData.find(x=>x.name.trim().toLowerCase()===name.trim().toLowerCase());
-  if(!emp) return showToast("Không tìm thấy!");
-  ["mon","tue","wed","thu","fri","sat","sun"].forEach((d,i)=>c("day"+i).value=emp[d]||"");
-  showToast("Đã tải lịch của "+name);
-
-  c("search-name").value = name;
-  localStorage.setItem(SEARCH_STORAGE_KEY, name);
-  setTimeout(()=>renderFlightResults(name), 120);
-});
-
-/* === Matching helpers (Không đổi) === */
-function tokenizeForMatch(normStr){
-  if(!normStr) return [];
-  return normStr.split(/[\s\-]+/).map(s=>s.trim()).filter(Boolean);
-}
-
-function exactNameMatches(searchNorm, tokenNorm){
-  return searchNorm === tokenNorm;
-}
-
-function partialNameMatches(searchNorm, tokenNorm){
-  if(!searchNorm || !tokenNorm) return false;
-  const sTokens = tokenizeForMatch(searchNorm);
-  const tTokens = tokenizeForMatch(tokenNorm);
-  if(sTokens.length===0) return false;
-  return sTokens.every(st=>{
-    return tTokens.some(tt => tt === st);
-  });
-}
-
-/* --- SEARCH (Không đổi) --- */
-function renderSuggestions(q){
-  const box=c("suggestions");
-  if(!q||!flightData.length){box.classList.add("hidden");return;}
-  const qNorm=normalizeText(q);
-  const map=new Map();
-  flightData.forEach(d=>{
-    if(d.nameNormalized && !map.has(d.nameNormalized)) map.set(d.nameNormalized, d.nameOnly);
-  });
-  const matches=[...map.entries()].filter(([norm])=>{
-    return partialNameMatches(qNorm, norm);
-  }).map(([norm,disp])=>({norm,disp}));
-  if(!matches.length){box.classList.add("hidden");return;}
-  box.innerHTML=matches.map(m=>`<div class="px-3 py-2 hover:bg-blue-50 cursor-pointer" data-n="${m.norm}">${m.disp}</div>`).join("");
-  box.classList.remove("hidden");
-  box.querySelectorAll("div").forEach(div=>{
-    div.onclick=()=>{
-      const val=div.textContent;
-      c("search-name").value=val;
-      box.classList.add("hidden");
-      localStorage.setItem(SEARCH_STORAGE_KEY, val);
-      renderFlightResults(val);
-    };
-  });
-}
-
-/* --- renderFlightResults (Không đổi) --- */
+/* --- RENDER CHUYẾN BAY (CÓ LỌC TRÙNG) --- */
 function renderFlightResults(nameRaw){
-  const container=c("flight-result");
-  if(!flightData.length){
-    container.innerHTML=`<p class="text-center text-gray-500 italic">Chưa có dữ liệu. Hãy tải file Excel.</p>`;return;
-  }
-  const qNorm=normalizeText(nameRaw);
-  let matches=flightData.filter(d=>exactNameMatches(qNorm, d.nameNormalized));
-  if(!matches.length){container.innerHTML=`<p class="text-center text-gray-500 italic">Không tìm thấy dữ liệu cho "${nameRaw}"</p>`;return;}
-  const unique=new Map();
-  matches.forEach(m=>{
-    const key=`${m.sheet}-${m.flt}-${m.etd}-${m.gate}-${m.nameNormalized}`;
-    if(unique.has(key)){
-      const e=unique.get(key);
-      e.supFlag = e.supFlag || m.supFlag;
-      e.gateFlag = e.gateFlag || m.gateFlag;
-      e.ketsoFlag = e.ketsoFlag || m.ketsoFlag;
-      e.wlctFlag = e.wlctFlag || m.wlctFlag;
-    } else unique.set(key, {...m});
-  });
-  matches=[...unique.values()];
-  const grouped={};daysOrder.forEach(d=>grouped[d]=[]);
-  matches.forEach(m=>grouped[m.sheet].push(m));
-  const now=new Date();
-  const vnWeekday=new Intl.DateTimeFormat('vi-VN',{timeZone:'Asia/Bangkok',weekday:'long'}).format(now).toLowerCase();
-  const mapVN={'thứ hai':0,'thứ ba':1,'thứ tư':2,'thứ năm':3,'thứ sáu':4,'thứ bảy':5,'chủ nhật':6};
-  const todayIndex=mapVN[vnWeekday]??new Date().getDay()-1;
-
-  let html="";
-  daysOrder.forEach((day,idx)=>{
-    const rows=grouped[day];
-    const isPast=idx<todayIndex, isToday=idx===todayIndex;
-    html+=`<div class="day-container ${isPast?'day-past':''} ${isToday?'day-today':''}">
-      <div class="day-title">${day}</div>`;
-    if(!rows.length){
-      html+=`<p class="text-gray-400 italic">Không có dữ liệu</p>`;
-    } else {
-      html+=`<table class="w-full result-table mt-1"><thead><tr>
-        <th>FLT</th><th>ETD</th><th>SUP</th><th>GATE</th><th>Kết sổ</th><th>WLC</th><th>Boarding</th></tr></thead><tbody>`;
-      rows.forEach(r=>{
-        let brd=r.tag==="BRD"?"✅":r.tag==="NO"?"❌":"";
-        html+=`<tr>
-          <td>${r.flt||'—'}</td>
-          <td>${r.etd||'—'}</td>
-          <td class="center">${r.supFlag?'✅':''}</td>
-          <td class="center">${r.gateFlag?'✅':''}</td>
-          <td class="center">${r.ketsoFlag?'✅':''}</td>
-          <td class="center">${r.wlctFlag?'✅':''}</td>
-          <td class="center">${brd}</td>
-        </tr>`;
-      });
-      html+=`</tbody></table>`;
-    }
-    html+=`</div>`;
-  });
-  container.innerHTML=html;
-  localStorage.setItem(SEARCH_STORAGE_KEY, nameRaw);
-}
-
-/* ========================================================
-   TÍNH NĂNG "LÀM HỘ" - CHECK AVAILABILITY RANGE (CẬP NHẬT MỚI)
-   ======================================================== */
-const teamSUP = ["TUYỀN 1", "HIỂN 1", "BÌNH 1", "ANH 22", "NGỌC 5", "ĐIỆP 3", "ĐƯỢC 1", "YẾN 5"];
-const teamGATE = ["CHUNG 1", "PHƯƠNG 6", "NGỌC 5", "THANH 6", "YẾN 8", "BÍCH 1", "THỦY 3"];
-
-// Mapping input values to index
-const dayMap = {"mon":0, "tue":1, "wed":2, "thu":3, "fri":4, "sat":5, "sun":6};
-const dayKeys = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]; // Match Excel keys
-
-function checkHelp(){
-    const fromH = parseFloat(c('help-from-h').value);
-    const fromDayStr = c('help-from-day').value;
-    const toH = parseFloat(c('help-to-h').value);
-    const toDayStr = c('help-to-day').value;
+    const container = c("flight-result-area");
+    const qNorm = normalizeText(nameRaw);
     
-    const useSup = c('chk-sup').checked;
-    const useGate = c('chk-gate').checked;
-    
-    const resultList = c('help-list');
-    const resultBox = c('help-result');
-
-    if(isNaN(fromH) || isNaN(toH)){
-        showToast("Vui lòng nhập giờ đầy đủ!");
-        return;
-    }
-    if(!employeeData.length){
-        showToast("Chưa có dữ liệu. Vui lòng tải Excel trước.");
-        return;
-    }
-
-    // Logic xác định danh sách cần tìm
-    let targetNames = [];
-    let isFilter = false;
-
-    // Nếu không tích gì -> Tìm tất cả (mặc định)
-    // Nếu tích Gate -> Gate + Sup
-    // Nếu tích Sup -> Sup
-    
-    if(useGate || useSup) {
-        isFilter = true;
-        if(useSup) targetNames = [...targetNames, ...teamSUP];
-        if(useGate) targetNames = [...targetNames, ...teamGATE, ...teamSUP]; // SUP làm được Gate
-        // Remove duplicates
-        targetNames = [...new Set(targetNames)];
-    }
-
-    let freeList = [];
-    const sourceList = isFilter ? targetNames : employeeData.map(e => e.name);
-
-    // Xử lý khoảng thời gian (có thể qua ngày)
-    const d1 = dayMap[fromDayStr];
-    const d2 = dayMap[toDayStr];
-    
-    // Đơn giản hóa: Chúng ta kiểm tra sự bận rộn trên từng khúc thời gian.
-    // Segment 1: Ngày bắt đầu, từ fromH -> 24h (nếu khác ngày) hoặc đến toH (nếu cùng ngày)
-    // Segment 2: Ngày kết thúc (nếu khác ngày), từ 0 -> toH
-    
-    sourceList.forEach(rawName => {
-        // Tìm nhân viên trong dữ liệu Excel
-        const normSearch = normalizeText(rawName);
-        const emp = employeeData.find(e => exactNameMatches(normSearch, normalizeText(e.name)));
-        
-        if(!emp){
-            // Nếu lọc theo Team mà không thấy tên trong bảng CC -> Bỏ qua hoặc báo lỗi
-            return; 
-        }
-
-        let isBusy = false;
-        let busyReason = "";
-
-        // Check Segment 1
-        const shift1 = emp[dayKeys[d1]];
-        if(shift1) {
-            const endH1 = (d1 === d2) ? toH : 24; // Nếu cùng ngày thì kết thúc lúc toH, khác ngày thì check đến hết ngày
-            const parts = shift1.split(";").map(x=>x.trim()).filter(Boolean);
-            for(let p of parts){
-                const s = parseShift(p);
-                if(s && !s.error && s.dur>0){
-                     // Overlap logic: StartA < EndB && EndA > StartB
-                    const overlap = Math.max(fromH, s.start) < Math.min(endH1, s.end);
-                    if(overlap) { isBusy = true; busyReason = `${dayKeys[d1].toUpperCase()}: ${p}`; break; }
-                }
-            }
-        }
-
-        // Check Segment 2 (Nếu qua ngày khác)
-        if(!isBusy && d1 !== d2){
-            const shift2 = emp[dayKeys[d2]];
-            if(shift2){
-                const startH2 = 0;
-                const parts = shift2.split(";").map(x=>x.trim()).filter(Boolean);
-                for(let p of parts){
-                    const s = parseShift(p);
-                    if(s && !s.error && s.dur>0){
-                        const overlap = Math.max(startH2, s.start) < Math.min(toH, s.end);
-                        if(overlap) { isBusy = true; busyReason = `${dayKeys[d2].toUpperCase()}: ${p}`; break; }
-                    }
-                }
-            }
-        }
-        
-        // Logic phụ: Nếu user nhập ngày lung tung (VD: T2 -> T5), code này coi như chỉ check T2 và T5.
-        // Nhưng yêu cầu thực tế thường chỉ là qua đêm hôm sau.
-
-        if(!isBusy){
-            // Lấy ca của ngày bắt đầu để hiển thị cho dễ theo dõi
-            const displayShift = emp[dayKeys[d1]] || "OFF";
-            freeList.push({name: emp.name, reason: displayShift});
-        }
+    // 1. Lọc chuyến của tôi - Lọc trùng (1 người 1 chuyến 1 dòng)
+    const myFlights = []; const seenMyFlt = new Set();
+    flightData.filter(f => f.nameNormalized === qNorm).forEach(f => {
+        const key = `${f.sheet}-${f.flt}-${f.etd}`;
+        if(!seenMyFlt.has(key)){ myFlights.push(f); seenMyFlt.add(key); }
     });
 
-    resultList.innerHTML = "";
-    if(freeList.length === 0){
-        resultList.innerHTML = "<li class='text-red-600 font-semibold'>Không có ai rảnh trong khoảng này!</li>";
-    } else {
-        freeList.forEach(item => {
-            const li = document.createElement("li");
-            li.innerHTML = `<span class="font-bold text-gray-800">${item.name}</span> <span class="text-xs text-gray-500">(${item.reason})</span>`;
-            resultList.appendChild(li);
+    if(!myFlights.length){ container.innerHTML = "<p class='text-center text-slate-400 italic py-6'>Không tìm thấy chuyến bay nào.</p>"; return; }
+
+    let html = "";
+    daysOrder.forEach(day => {
+        const dayF = myFlights.filter(f => f.sheet === day).sort((a,b)=>a.etd.localeCompare(b.etd));
+        if(!dayF.length) return;
+
+        html += `<div class="p-3 bg-white border border-slate-200 rounded-2xl shadow-sm mb-3">
+                 <div class="font-bold text-blue-800 text-xs mb-3 px-1">📅 ${day}</div>`;
+        
+        dayF.forEach((mf, idx) => {
+            const accId = `acc-${day}-${idx}`;
+            // 2. Lấy đồng đội - Lọc trùng tên đồng đội
+            const rawCol = flightData.filter(f => f.sheet===day && f.flt===mf.flt && f.etd===mf.etd);
+            const colleagues = []; const seenCol = new Set();
+            rawCol.forEach(c => {
+                if(!seenCol.has(c.nameOnly)){ colleagues.push(c); seenCol.add(c.nameOnly); }
+            });
+
+            const pos = mf.isSup?'SUP':mf.isGate?'GATE':mf.isKetso?'KS':mf.isWlc?'WLC':'...';
+
+            html += `
+            <div class="border-b last:border-0 pb-3 mb-3 last:mb-0" id="${accId}">
+                <div class="flex items-center justify-between cursor-pointer" onclick="document.getElementById('${accId}').classList.toggle('details-open')">
+                    <div class="flex items-center gap-3">
+                        <span class="bg-blue-600 text-white px-2 py-1 rounded-lg text-[10px] font-black">${mf.flt}</span>
+                        <span class="text-sm font-bold text-slate-700">⏰ ${mf.etd}</span>
+                        <span class="text-[10px] font-bold text-rose-500 uppercase">Pos: ${pos}</span>
+                    </div>
+                    <span class="arrow-icon text-slate-400">▼</span>
+                </div>
+                <div class="details-content mt-3 bg-slate-50 rounded-xl p-2 animate-fadeIn">
+                    <table class="staff-sub-table w-full">`;
+            colleagues.forEach(col => {
+                const shiftVal = getShiftForEmp(col.nameNormalized, day);
+                html += `<tr class="${col.nameNormalized===qNorm?'bg-blue-100/60 rounded-lg':''}">
+                            <td class="font-bold text-slate-800">${col.nameOnly}</td>
+                            <td class="text-[10px] font-bold text-blue-600">${col.isSup?'SUP':col.isGate?'GATE':col.isKetso?'KS':'WLC'}</td>
+                            <td class="text-right font-mono font-bold text-slate-500">${shiftVal}</td>
+                         </tr>`;
+            });
+            html += `</table></div></div>`;
         });
-    }
-    resultBox.classList.remove("hidden");
+        html += `</div>`;
+    });
+    container.innerHTML = html;
 }
 
-c("btn-find-help").addEventListener("click", checkHelp);
+function getShiftForEmp(nameNorm, dayOrderKey){
+    const emp = employeeData.find(e => normalizeText(e.name) === nameNorm);
+    return (emp && emp[dayOrderKey.toLowerCase()] && emp[dayOrderKey.toLowerCase()]!=="OFF") ? emp[dayOrderKey.toLowerCase()] : "OFF";
+}
 
-/* --- Wire events --- */
-c("search-name").addEventListener("input",e=>renderSuggestions(e.target.value||""));
-c("search-name").addEventListener("keydown",e=>{
-  if(e.key==="Enter"){e.preventDefault(); const val=e.target.value; if(val){ localStorage.setItem(SEARCH_STORAGE_KEY, val);} renderFlightResults(e.target.value);}
-});
+function updateEmployeeDropdown(){
+    const sel = c("employee-select");
+    sel.innerHTML = '<option value="">-- Chọn tên từ danh sách --</option>';
+    employeeData.sort((a,b)=>a.name.localeCompare(b.name, "vi")).forEach(e => {
+        sel.innerHTML += `<option value="${e.name}">${e.name} (${e.source.includes('qt')?'QT':'NĐ'})</option>`;
+    });
+}
 
-document.addEventListener("DOMContentLoaded",()=>{
-  createInputs();fillWeekSelect();loadLastExcelData();
-  const last=localStorage.getItem(SEARCH_STORAGE_KEY);
-  if(last){c("search-name").value=last;setTimeout(()=>renderFlightResults(last),500);}
-  c("save-week").onclick=saveWeek;
-  c("week-select").onchange=e=>{const v=e.target.value;if(v){c("week-name").value=v;loadWeek(v);} };
-  c("calc-week").onclick=calcWeek;
-  c("clear-week").onclick=deleteWeek;
-  c("clear-all").onclick=clearAll;
+/* --- EVENT LISTENERS --- */
+c("excel-upload").onchange = e => {
+    const f = e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = evt => {
+        const data = new Uint8Array(evt.target.result);
+        localStorage.setItem(EXCEL_KEY, btoa(data.reduce((a,i)=>a+String.fromCharCode(i),"")));
+        processExcel(data);
+    };
+    r.readAsArrayBuffer(f);
+};
+
+c("employee-select").onchange = e => {
+    const n = e.target.value; if(!n) return;
+    const emp = employeeData.find(x=>x.name===n);
+    daysOrder.forEach((d,i) => c("day"+i).value = emp[d.toLowerCase()] || "");
+    c("search-name").value = n;
+    renderFlightResults(n);
+};
+
+c("search-name").oninput = e => {
+    const q = normalizeText(e.target.value); const box = c("suggestions");
+    if(!q){ box.classList.add("hidden"); return; }
+    const matches = [...new Set(flightData.map(f=>f.nameOnly))].filter(n=>normalizeText(n).includes(q)).slice(0,10);
+    if(!matches.length){ box.classList.add("hidden"); return; }
+    box.innerHTML = matches.map(n=>`<div class="px-4 py-3 hover:bg-blue-50 cursor-pointer font-bold text-sm text-slate-700 border-b last:border-0">${n}</div>`).join("");
+    box.classList.remove("hidden");
+    box.querySelectorAll("div").forEach(div => div.onclick = () => {
+        c("search-name").value = div.textContent; box.classList.add("hidden"); renderFlightResults(div.textContent);
+    });
+};
+
+c("calc-week").onclick = () => {
+    const tbody = c("result-body"); tbody.innerHTML = ""; let total = 0;
+    days.forEach((d, i) => {
+        const v = c("day"+i).value.trim(); if(!v) return;
+        v.split(";").forEach((p, idx) => {
+            const r = parseShift(p);
+            if(r.dur > 0){
+                tbody.innerHTML += `<tr class="hover:bg-blue-50/50">
+                    <td class="py-3 px-3 font-bold text-blue-900">${idx===0?d:''}</td>
+                    <td><span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-100">${p}</span></td>
+                    <td class="text-center font-mono text-xs text-slate-600">${fmtHoursToHHMM(r.start)}</td>
+                    <td class="text-center font-mono text-xs text-slate-600">${fmtHoursToHHMM(r.end)}</td>
+                    <td class="text-center font-bold text-blue-600">${r.dur.toFixed(1)}h</td>
+                </tr>`;
+                total += r.dur;
+            }
+        });
+    });
+    tbody.innerHTML += `<tr class="bg-slate-800 text-white font-bold"><td colspan="4" class="p-3 uppercase text-[10px]">TỔNG CỘNG TUẦN</td><td class="text-center py-3 text-lg">${total.toFixed(1)}h</td></tr>`;
+    c("result-container").classList.remove("hidden");
+    c("result-container").scrollIntoView({behavior:"smooth"});
+};
+
+c("clear-ui").onclick = () => { days.forEach((_,i)=>c("day"+i).value=""); c("result-container").classList.add("hidden"); };
+c("clear-all-data").onclick = () => { if(confirm("Xóa toàn bộ lịch đã lưu?")) { localStorage.clear(); location.reload(); } };
+
+function showToast(m){ const t=document.createElement('div'); t.className='toast'; t.textContent=m; document.body.appendChild(t); setTimeout(()=>t.remove(),2500); }
+
+c("btn-find-help").onclick = () => {
+    const fH = parseFloat(c('help-from-h').value), tH = parseFloat(c('help-to-h').value);
+    const fD = c('help-from-day').value, tD = c('help-to-day').value;
+    if(isNaN(fH) || isNaN(tH)) return showToast("⚠️ Nhập đầy đủ giờ!");
+    
+    const useSup = c('chk-sup').checked, useGate = c('chk-gate').checked;
+    let target = employeeData;
+    if(useSup || useGate){
+        let filterList = [];
+        if(useSup) filterList = [...filterList, ...teamSUP];
+        if(useGate) filterList = [...filterList, ...teamGATE];
+        target = employeeData.filter(e => filterList.some(tn => normalizeText(tn) === normalizeText(e.name)));
+    }
+
+    let free = [];
+    const absS = dayMap[fD]*24 + fH, absE = dayMap[tD]*24 + tH;
+
+    target.forEach(e => {
+        let busy = false;
+        [fD, tD].forEach(dk => {
+            (e[daysOrder[dayMap[dk]].toLowerCase()]||"").split(";").forEach(p => {
+                const r = parseShift(p);
+                if(r.dur > 0){
+                    const s = dayMap[dk]*24+r.start, eT = dayMap[dk]*24+r.end;
+                    if(Math.max(absS, s) < Math.min(absE, eT)) busy = true;
+                }
+            });
+        });
+        if(!busy) free.push(e.name);
+    });
+
+    c('help-list').innerHTML = free.length ? [...new Set(free)].map(n => `<li class="bg-emerald-50 text-emerald-800 p-2.5 rounded-xl border border-emerald-100 font-bold text-sm">🟢 ${n}</li>`).join("") : "<li class='text-center py-4 text-slate-400'>Không có ai rảnh</li>";
+    c('help-result-box').classList.remove("hidden");
+};
+
+/* --- KHỞI TẠO TRANG --- */
+document.addEventListener("DOMContentLoaded", () => {
+    const box = c("days-container");
+    days.forEach((d,i) => {
+        box.innerHTML += `<div class="day-container shadow-sm border border-slate-100"><label class="block text-[10px] font-black text-slate-400 uppercase mb-1">${d}</label>
+        <input id="day${i}" type="text" placeholder="Trống..." class="w-full bg-transparent text-base font-bold text-slate-800 outline-none"></div>`;
+    });
+    const opts = days.map((d,i) => `<option value="${daysOrder[i].toLowerCase()}">${d}</option>`).join("");
+    c('help-from-day').innerHTML = opts; c('help-to-day').innerHTML = opts;
+
+    const saved = localStorage.getItem(EXCEL_KEY);
+    if(saved){
+        const bin = atob(saved); const arr = new Uint8Array(bin.length);
+        for(let i=0; i<bin.length; i++) arr[i] = bin.charCodeAt(i);
+        processExcel(arr);
+    }
 });
 </script>
-
 </body>
 </html>
