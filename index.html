@@ -3,82 +3,50 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>LỊCH CỐNG HIẾN HGS - NỘI ĐỊA</title>
+  <title>LỊCH CỐNG HIẾN HGS - NỘI ĐỊA ONLINE</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+
   <style>
     html { font-size: 16px; } 
-    body { 
-      font-family: 'Plus Jakarta Sans', sans-serif; 
-      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); 
-      color: #1e293b; 
-      min-height: 100vh;
-    }
-    .glass-card { 
-      background: rgba(255, 255, 255, 0.95); 
-      border-radius: 1.25rem; 
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.5);
-    }
-    .section-title {
-      display: flex; align-items: center; gap: 8px; font-weight: 700; color: #1e40af;
-      margin-bottom: 1rem; border-left: 4px solid #3b82f6; padding-left: 12px;
-    }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); color: #1e293b; min-height: 100vh; }
+    .glass-card { background: rgba(255, 255, 255, 0.95); border-radius: 1.25rem; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); border: 1px solid rgba(255, 255, 255, 0.5); }
+    .section-title { display: flex; align-items: center; gap: 8px; font-weight: 700; color: #1e40af; margin-bottom: 1rem; border-left: 4px solid #3b82f6; padding-left: 12px; }
     .btn-action { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
     .btn-action:active { transform: scale(0.97); }
-    
-    .toast {
-      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-      background: #1e293b; color: white; padding: 12px 24px;
-      border-radius: 99px; font-weight: 600; z-index: 9999; animation: slideDownUp 2.5s forwards;
-    }
-    @keyframes slideDownUp {
-      0% { opacity: 0; transform: translate(-50%, -20px); }
-      15%, 85% { opacity: 1; transform: translate(-50%, 0); }
-      100% { opacity: 0; transform: translate(-50%, -20px); }
-    }
-    
+    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 12px 24px; border-radius: 99px; font-weight: 600; z-index: 9999; animation: slideDownUp 2.5s forwards; }
+    @keyframes slideDownUp { 0% { opacity: 0; transform: translate(-50%, -20px); } 15%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -20px); } }
     .day-container { border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px; background: white; }
     .staff-sub-table td { padding: 6px 10px !important; font-size: 0.85rem; }
-
-    /* Accordion Arrow */
     .arrow-icon { transition: transform 0.3s ease; }
     .details-open .arrow-icon { transform: rotate(180deg); }
     .details-content { display: none; }
     .details-open .details-content { display: block; }
-
-    /* Input file custom */
-    .file-input-wrapper {
-        position: relative;
-        overflow: hidden;
-        display: inline-block;
-        width: 100%;
-    }
-    .file-input-wrapper input[type=file] {
-        position: absolute;
-        left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;
-    }
+    .file-input-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; }
+    .file-input-wrapper input[type=file] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+    #loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: flex; justify-content: center; align-items: center; z-index: 10000; visibility: hidden; }
   </style>
 </head>
 
 <body class="p-4 md:p-8">
+  <div id="loading-overlay"><div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div></div>
+
   <div class="max-w-2xl mx-auto space-y-6">
-    
     <header class="text-center space-y-2">
-      <h2 class="text-2xl font-black text-blue-800 tracking-tight uppercase">
-        📅 LỊCH "CỐNG HIẾN" NỘI ĐỊA
-      </h2>
-      <p class="text-[11px] font-bold text-slate-500 italic px-4">"Dữ liệu phục vụ tra cứu nhanh - Hãy bám sát lịch cán bộ gửi"</p>
+      <h2 class="text-2xl font-black text-blue-800 tracking-tight uppercase">📅 HGS NỘI ĐỊA (TRỰC TUYẾN)</h2>
+      <p id="status-online" class="text-[10px] font-bold text-emerald-600 bg-emerald-50 inline-block px-3 py-1 rounded-full border border-emerald-100">● ĐANG ĐỒNG BỘ TRỰC TUYẾN</p>
     </header>
 
     <div class="glass-card p-5">
       <div class="section-title">👤 Lịch cá nhân của bạn</div>
       <div class="mb-4">
-          <select id="employee-select" class="w-full border border-blue-200 rounded-xl text-base px-4 py-3 bg-blue-50 font-bold text-blue-900 outline-none focus:ring-2 focus:ring-blue-400 appearance-none">
-              <option value="">-- Chọn tên từ danh sách --</option>
+          <select id="employee-select" class="w-full border border-blue-200 rounded-xl text-base px-4 py-3 bg-blue-50 font-bold text-blue-900 outline-none focus:ring-2 focus:ring-blue-400">
+              <option value="">-- Đang tải danh sách... --</option>
           </select>
       </div>
       <div id="days-container" class="grid grid-cols-1 gap-2"></div>
@@ -90,16 +58,10 @@
 
     <div id="result-container" class="hidden glass-card p-5">
       <div class="section-title">📊 Tổng hợp tuần</div>
-      <div class="overflow-hidden rounded-xl border border-slate-100">
+      <div id="result-body-table" class="overflow-hidden rounded-xl border border-slate-100">
         <table class="w-full text-sm">
           <thead class="bg-slate-800 text-white">
-            <tr>
-              <th class="px-3 py-3 text-left">Thứ</th>
-              <th class="px-3 py-3 text-left">Ca</th>
-              <th class="px-3 py-3 text-center">Vào</th>
-              <th class="px-3 py-3 text-center">Ra</th>
-              <th class="px-3 py-3 text-center">Tổng</th>
-            </tr>
+            <tr><th class="px-3 py-3 text-left">Thứ</th><th class="px-3 py-3 text-left">Ca</th><th class="px-3 py-3 text-center">Vào</th><th class="px-3 py-3 text-center">Ra</th><th class="px-3 py-3 text-center">Tổng</th></tr>
           </thead>
           <tbody id="result-body" class="divide-y divide-slate-100 bg-white"></tbody>
         </table>
@@ -109,8 +71,7 @@
     <div class="glass-card p-5 border-t-4 border-t-indigo-500">
       <div class="section-title text-indigo-700">🔍 Chuyến bay & Đồng đội</div>
       <div class="relative mb-4">
-        <input id="search-name" type="text" placeholder="Nhập tên nhân viên tra cứu..."
-               class="w-full border border-slate-200 rounded-xl px-4 py-3 pl-10 text-base focus:ring-2 focus:ring-indigo-400 outline-none shadow-sm font-semibold">
+        <input id="search-name" type="text" placeholder="Nhập tên nhân viên..." class="w-full border border-slate-200 rounded-xl px-4 py-3 pl-10 font-semibold outline-none focus:ring-2 focus:ring-indigo-400">
         <span class="absolute left-3 top-4 opacity-40">👤</span>
         <div id="suggestions" class="absolute w-full bg-white border border-slate-200 rounded-xl shadow-xl mt-1 hidden z-50 max-h-60 overflow-y-auto"></div>
       </div>
@@ -121,84 +82,83 @@
       <div class="section-title text-emerald-700">🤝 Tìm người làm hộ</div>
       <div class="grid grid-cols-2 gap-3 mb-4">
         <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-          <p class="text-[10px] font-bold text-emerald-600 uppercase">Từ lúc (Thứ/Giờ)</p>
+          <p class="text-[10px] font-bold text-emerald-600 uppercase">Từ lúc</p>
           <div class="flex gap-1">
             <select id="help-from-day" class="flex-1 bg-transparent text-sm font-bold outline-none"></select>
-            <input id="help-from-h" type="number" step="0.5" placeholder="0.0" class="w-12 text-center border-b border-emerald-300 font-bold text-emerald-800">
+            <input id="help-from-h" type="number" step="0.5" placeholder="0.0" class="w-12 text-center border-b border-emerald-300 font-bold">
           </div>
         </div>
         <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-          <p class="text-[10px] font-bold text-emerald-600 uppercase">Đến lúc (Thứ/Giờ)</p>
+          <p class="text-[10px] font-bold text-emerald-600 uppercase">Đến lúc</p>
           <div class="flex gap-1">
             <select id="help-to-day" class="flex-1 bg-transparent text-sm font-bold outline-none"></select>
-            <input id="help-to-h" type="number" step="0.5" placeholder="0.0" class="w-12 text-center border-b border-emerald-300 font-bold text-emerald-800">
+            <input id="help-to-h" type="number" step="0.5" placeholder="0.0" class="w-12 text-center border-b border-emerald-300 font-bold">
           </div>
         </div>
       </div>
       <div class="flex justify-center gap-4 mb-4">
-          <label class="flex items-center gap-1.5 text-sm font-bold text-blue-700 cursor-pointer"><input type="checkbox" id="chk-sup" class="w-4 h-4"> Team SUP</label>
-          <label class="flex items-center gap-1.5 text-sm font-bold text-orange-700 cursor-pointer"><input type="checkbox" id="chk-gate" class="w-4 h-4"> Team GATE</label>
+          <label class="flex items-center gap-1.5 text-sm font-bold text-blue-700 cursor-pointer"><input type="checkbox" id="chk-sup"> Team SUP</label>
+          <label class="flex items-center gap-1.5 text-sm font-bold text-orange-700 cursor-pointer"><input type="checkbox" id="chk-gate"> Team GATE</label>
       </div>
-      <button id="btn-find-help" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-emerald-700">🔍 TÌM KIẾM NGAY</button>
+      <button id="btn-find-help" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg">🔍 TÌM NGƯỜI RẢNH</button>
       <div id="help-result-box" class="hidden mt-3 p-3 bg-white rounded-xl border border-emerald-200 max-h-52 overflow-y-auto">
           <ul id="help-list" class="grid grid-cols-1 gap-1.5"></ul>
       </div>
     </div>
 
     <div class="glass-card p-6 bg-slate-100 border-2 border-slate-200">
-        <div class="section-title text-slate-700">⚙️ CÀI ĐẶT & DỮ LIỆU</div>
-        <p class="text-[11px] text-slate-500 mb-4 font-medium italic">Vui lòng tải file Excel lịch làm việc mới nhất tại đây:</p>
-        
+        <div class="section-title text-slate-700">⚙️ QUẢN LÝ DỮ LIỆU CHUNG</div>
+        <p class="text-[11px] text-slate-500 mb-4 font-medium italic italic">Dữ liệu tải lên đây sẽ được cập nhật cho **tất cả mọi người** cùng xem.</p>
         <div class="space-y-4">
             <div class="file-input-wrapper">
-                <button class="w-full bg-white border-2 border-dashed border-blue-400 text-blue-600 font-bold py-4 rounded-xl hover:bg-blue-50 transition-colors">
-                    📁 CHỌN FILE EXCEL LỊCH MỚI
+                <button class="w-full bg-white border-2 border-dashed border-blue-400 text-blue-600 font-bold py-4 rounded-xl hover:bg-blue-50">
+                    📁 TẢI LỊCH EXCEL LÊN HỆ THỐNG
                 </button>
                 <input type="file" id="excel-upload" accept=".xls,.xlsx">
             </div>
-
-            <div class="flex gap-2">
-                <input id="week-name" type="text" placeholder="Tên tuần (VD: Tuần 05)" class="flex-1 border border-slate-300 p-3 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-400">
-                <button id="save-week-btn" class="bg-blue-500 text-white px-4 py-3 rounded-xl text-xs font-bold shadow-sm">LƯU LỊCH</button>
-            </div>
-
-            <div class="flex items-center justify-between gap-4 pt-2">
-                <select id="week-select" class="flex-1 border border-slate-300 p-3 rounded-xl text-sm bg-white">
-                    <option value="">-- Xem lịch tuần cũ --</option>
-                </select>
-                <button id="clear-all-data" class="text-red-500 text-[11px] font-bold hover:underline">XÓA HẾT DỮ LIỆU</button>
+            <div class="flex items-center justify-between pt-2">
+                <span class="text-[10px] font-bold text-slate-400">Lưu ý: Chỉ Admin mới nên up file để tránh loạn dữ liệu.</span>
+                <button id="btn-refresh" class="text-blue-500 text-[11px] font-bold hover:underline">🔄 LÀM MỚI</button>
             </div>
         </div>
     </div>
 
     <footer class="text-center py-6">
-        <a href="https://www.facebook.com/huy.hai.333030" target="_blank" class="inline-block bg-white px-4 py-2 rounded-full shadow-sm border text-sm font-bold text-blue-600 hover:shadow-md transition-all">
-            ✨ Created by Hải 9 ✨
-        </a>
+        <a href="https://www.facebook.com/huy.hai.333030" target="_blank" class="text-sm font-bold text-blue-600">✨ Created by Hải 9 ✨</a>
     </footer>
   </div>
 
 <script>
-/* --- BIẾN VÀ HÀM TIỆN ÍCH --- */
+/* --- CẤU HÌNH FIREBASE (HÃY THAY BẰNG KEY CỦA BẠN) --- */
+const firebaseConfig = {
+  apiKey: "AIzaSyA2scrs8GpNAWZ5ETId6z3vkUMmArD1yn8",
+  authDomain: "hgs36-6db0b.firebaseapp.com",
+  databaseURL: "https://hgs36-6db0b-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "hgs36-6db0b",
+  storageBucket: "hgs36-6db0b.firebasestorage.app",
+  messagingSenderId: "356125658008",
+  appId: "1:356125658008:web:aec521395459b2192579ed",
+  measurementId: "G-JZVNL3EWSQ"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
 const c = id => document.getElementById(id);
 const days = ["Thứ Hai","Thứ Ba","Thứ Tư","Thứ Năm","Thứ Sáu","Thứ Bảy","Chủ Nhật"];
 const daysOrder = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
 const dayMap = {"mon":0, "tue":1, "wed":2, "thu":3, "fri":4, "sat":5, "sun":6};
-const EXCEL_KEY = 'hgs_nd_last_excel_v2';
 const teamSUP = ["TUYỀN 1", "HIỂN 1", "BÌNH 1", "ANH 22", "NGỌC 5", "ĐIỆP 3", "ĐƯỢC 1", "YẾN 5", "TÙNG 13"];
 const teamGATE = ["CHUNG 1", "PHƯƠNG 6", "NGỌC 5", "THANH 6", "YẾN 8", "BÍCH 1", "THỦY 3", "QUYÊN 11", "YẾN 5"];
 
 let employeeData = [];
 let flightData = [];
 
-function removeDiacritics(str){ return str ? str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g,'d').replace(/Đ/g,'D') : ""; }
-function normalizeText(s){ return s ? removeDiacritics(s).replace(/[^A-Z0-9\s\-]/gi,'').trim().replace(/\s+/g,' ').toUpperCase() : ""; }
-function excelTimeToHHMM(v){
-    if(typeof v==='number'){ const total=Math.round(v*24*60); return String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0'); }
-    return String(v||"").trim();
-}
+/* --- TIỆN ÍCH --- */
+function showLoading(s){ c('loading-overlay').style.visibility = s ? 'visible' : 'hidden'; }
+function showToast(m){ const t=document.createElement('div'); t.className='toast'; t.textContent=m; document.body.appendChild(t); setTimeout(()=>t.remove(),2500); }
+function normalizeText(s){ return s ? s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g,'d').replace(/Đ/g,'D').replace(/[^A-Z0-9\s\-]/gi,'').trim().replace(/\s+/g,' ').toUpperCase() : ""; }
+function excelTimeToHHMM(v){ if(typeof v==='number'){ const total=Math.round(v*24*60); return String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0'); } return String(v||"").trim(); }
 
-/* --- PHÂN TÍCH CA LÀM VIỆC --- */
 const shifts={ HC:{start:7.5,end:15.5},A:{start:22,end:30},X:{start:14,end:22},S:{start:6,end:14} };
 function parseShift(str){
     str=(str||"").toUpperCase().trim(); if(!str || str==="OFF" || str==="OM") return {start:0,end:0,dur:0};
@@ -216,10 +176,11 @@ function parseShift(str){
     if(m[3]){ const v=parseFloat(m[3].replace("-","")); m[3].startsWith("-")?end-=v:end+=v; }
     return {start, end, dur: end-start};
 }
-function fmtHoursToHHMM(t){ const hh=Math.floor(t%24); const mm=Math.round((t%1)*60); return String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0"); }
+function fmtHours(t){ const hh=Math.floor(t%24); const mm=Math.round((t%1)*60); return String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0"); }
 
-/* --- LOGIC XỬ LÝ EXCEL NỘI ĐỊA --- */
+/* --- XỬ LÝ DỮ LIỆU EXCEL NỘI ĐỊA --- */
 function processExcel(data){
+    showLoading(true);
     const wb = XLSX.read(data, {type:"array"});
     let allEmp = [];
     ["bảng chấm công qt","bảng chấm công nđ"].forEach(t => {
@@ -228,8 +189,7 @@ function processExcel(data){
             const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], {header:1});
             rows.slice(1).forEach(row => {
                 if(row[1]) allEmp.push({
-                    name: String(row[1]).trim(),
-                    source: t,
+                    name: String(row[1]).trim(), source: t,
                     mon: (row[2]||"")+(row[4]?';'+row[4]:""), tue: (row[5]||"")+(row[7]?';'+row[7]:""),
                     wed: (row[8]||"")+(row[10]?';'+row[10]:""), thu: (row[11]||"")+(row[13]?';'+row[13]:""),
                     fri: (row[14]||"")+(row[16]?';'+row[16]:""), sat: (row[17]||"")+(row[19]?';'+row[19]:""),
@@ -238,7 +198,6 @@ function processExcel(data){
             });
         }
     });
-    employeeData = allEmp;
 
     let allFlt = [];
     const namePattern = /([\p{L}Đđ\s\-]+?)\s+(\d{1,4})/ug;
@@ -247,7 +206,6 @@ function processExcel(data){
         if(!sn) return;
         const sheet = wb.Sheets[sn];
         let lastFlt="", lastEtd="", lastGate="";
-        // Quét nội địa: Hàng 4-27, Cột I, J, L
         for(let r=4; r<=27; r++){
             const fV=sheet['I'+r]?sheet['I'+r].v:null, eV=sheet['J'+r]?sheet['J'+r].v:null, gV=sheet['L'+r]?sheet['L'+r].v:null;
             const flt=fV?String(fV).trim():lastFlt, etd=eV!==undefined?excelTimeToHHMM(eV):lastEtd, gate=gV?String(gV).trim():lastGate;
@@ -259,75 +217,83 @@ function processExcel(data){
                     const matches = [...String(cell.v).matchAll(namePattern)];
                     const colLet = XLSX.utils.encode_col(cIdx);
                     matches.forEach(m => {
-                        const nameRaw = (m[1].trim()+' '+m[2].trim()).toUpperCase();
-                        allFlt.push({
-                            sheet: dName, flt, etd, gate, 
-                            nameOnly: nameRaw,
-                            nameNormalized: normalizeText(nameRaw),
-                            isSup: colLet==='K', isGate: colLet==='L', isKetso: colLet==='M', isWlc: colLet==='N'
-                        });
+                        const nRaw = (m[1].trim()+' '+m[2].trim()).toUpperCase();
+                        allFlt.push({ sheet: dName, flt, etd, gate, nameOnly: nRaw, nameNormalized: normalizeText(nRaw), isSup: colLet==='K', isGate: colLet==='L', isKetso: colLet==='M', isWlc: colLet==='N' });
                     });
                 }
             }
         }
     });
-    flightData = allFlt;
-    updateEmployeeDropdown();
-    showToast("✅ Đã xử lý lịch mới!");
+
+    // ĐẨY LÊN FIREBASE
+    db.ref('hgs_nd_data').set({ employeeData: allEmp, flightData: allFlt })
+    .then(() => { showLoading(false); showToast("🚀 Đã tải lên và chia sẻ cho mọi người!"); })
+    .catch(err => { showLoading(false); alert("Lỗi tải lên: " + err.message); });
 }
 
-/* --- RENDER CHUYẾN BAY (CÓ LỌC TRÙNG) --- */
+/* --- ĐỒNG BỘ DỮ LIỆU TỪ FIREBASE --- */
+function syncFromFirebase(){
+    showLoading(true);
+    db.ref('hgs_nd_data').on('value', snapshot => {
+        const val = snapshot.val();
+        if(val){
+            employeeData = val.employeeData || [];
+            flightData = val.flightData || [];
+            updateDropdown();
+            showToast("📥 Đã cập nhật lịch mới nhất!");
+        }
+        showLoading(false);
+    });
+}
+
+function updateDropdown(){
+    const sel = c("employee-select");
+    sel.innerHTML = '<option value="">-- Chọn tên từ danh sách --</option>';
+    employeeData.sort((a,b)=>a.name.localeCompare(b.name, "vi")).forEach(e => {
+        sel.innerHTML += `<option value="${e.name}">${e.name}</option>`;
+    });
+}
+
 function renderFlightResults(nameRaw){
     const container = c("flight-result-area");
     const qNorm = normalizeText(nameRaw);
-    
-    // 1. Lọc chuyến của tôi - Lọc trùng (1 người 1 chuyến 1 dòng)
-    const myFlights = []; const seenMyFlt = new Set();
+    const myF = []; const seen = new Set();
     flightData.filter(f => f.nameNormalized === qNorm).forEach(f => {
-        const key = `${f.sheet}-${f.flt}-${f.etd}`;
-        if(!seenMyFlt.has(key)){ myFlights.push(f); seenMyFlt.add(key); }
+        const k = `${f.sheet}-${f.flt}-${f.etd}`;
+        if(!seen.has(k)){ myF.push(f); seen.add(k); }
     });
-
-    if(!myFlights.length){ container.innerHTML = "<p class='text-center text-slate-400 italic py-6'>Không tìm thấy chuyến bay nào.</p>"; return; }
+    if(!myF.length){ container.innerHTML = "<p class='text-center text-slate-400 py-6 italic'>Không có dữ liệu.</p>"; return; }
 
     let html = "";
     daysOrder.forEach(day => {
-        const dayF = myFlights.filter(f => f.sheet === day).sort((a,b)=>a.etd.localeCompare(b.etd));
+        const dayF = myF.filter(f => f.sheet === day);
         if(!dayF.length) return;
-
-        html += `<div class="p-3 bg-white border border-slate-200 rounded-2xl shadow-sm mb-3">
-                 <div class="font-bold text-blue-800 text-xs mb-3 px-1">📅 ${day}</div>`;
-        
-        dayF.forEach((mf, idx) => {
-            const accId = `acc-${day}-${idx}`;
-            // 2. Lấy đồng đội - Lọc trùng tên đồng đội
-            const rawCol = flightData.filter(f => f.sheet===day && f.flt===mf.flt && f.etd===mf.etd);
-            const colleagues = []; const seenCol = new Set();
-            rawCol.forEach(c => {
-                if(!seenCol.has(c.nameOnly)){ colleagues.push(c); seenCol.add(c.nameOnly); }
+        html += `<div class="p-3 bg-white border border-slate-200 rounded-2xl shadow-sm mb-3"><div class="font-bold text-blue-800 text-xs mb-2 px-1">📅 ${day}</div>`;
+        dayF.forEach((mf, i) => {
+            const accId = `acc-${day}-${i}`;
+            const colleagues = []; const sCol = new Set();
+            flightData.filter(f => f.sheet===day && f.flt===mf.flt && f.etd===mf.etd).forEach(c => {
+                if(!sCol.has(c.nameOnly)){ colleagues.push(c); sCol.add(c.nameOnly); }
             });
-
             const pos = mf.isSup?'SUP':mf.isGate?'GATE':mf.isKetso?'KS':mf.isWlc?'WLC':'...';
-
-            html += `
-            <div class="border-b last:border-0 pb-3 mb-3 last:mb-0" id="${accId}">
+            html += `<div class="border-b last:border-0 pb-2 mb-2" id="${accId}">
                 <div class="flex items-center justify-between cursor-pointer" onclick="document.getElementById('${accId}').classList.toggle('details-open')">
-                    <div class="flex items-center gap-3">
-                        <span class="bg-blue-600 text-white px-2 py-1 rounded-lg text-[10px] font-black">${mf.flt}</span>
-                        <span class="text-sm font-bold text-slate-700">⏰ ${mf.etd}</span>
-                        <span class="text-[10px] font-bold text-rose-500 uppercase">Pos: ${pos}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-black">${mf.flt}</span>
+                        <span class="text-sm font-bold text-slate-700">${mf.etd}</span>
+                        <span class="text-[10px] font-bold text-rose-500">[${pos}]</span>
                     </div>
-                    <span class="arrow-icon text-slate-400">▼</span>
+                    <span class="arrow-icon text-slate-300">▼</span>
                 </div>
-                <div class="details-content mt-3 bg-slate-50 rounded-xl p-2 animate-fadeIn">
-                    <table class="staff-sub-table w-full">`;
+                <div class="details-content mt-2 bg-slate-50 rounded-xl p-2 animate-fadeIn"><table class="staff-sub-table w-full">`;
             colleagues.forEach(col => {
-                const shiftVal = getShiftForEmp(col.nameNormalized, day);
-                html += `<tr class="${col.nameNormalized===qNorm?'bg-blue-100/60 rounded-lg':''}">
-                            <td class="font-bold text-slate-800">${col.nameOnly}</td>
-                            <td class="text-[10px] font-bold text-blue-600">${col.isSup?'SUP':col.isGate?'GATE':col.isKetso?'KS':'WLC'}</td>
-                            <td class="text-right font-mono font-bold text-slate-500">${shiftVal}</td>
-                         </tr>`;
+                const emp = employeeData.find(e => normalizeText(e.name) === col.nameNormalized);
+                const shift = (emp && emp[day.toLowerCase()]) ? emp[day.toLowerCase()] : "OFF";
+                html += `<tr class="${col.nameNormalized===qNorm?'bg-blue-100/60':''}">
+                    <td class="font-bold text-slate-800">${col.nameOnly}</td>
+                    <td class="text-[10px] font-bold text-blue-600">${col.isSup?'SUP':col.isGate?'GATE':col.isKetso?'KS':'WLC'}</td>
+                    <td class="text-right font-mono font-bold text-slate-500">${shift}</td>
+                </tr>`;
             });
             html += `</table></div></div>`;
         });
@@ -336,28 +302,11 @@ function renderFlightResults(nameRaw){
     container.innerHTML = html;
 }
 
-function getShiftForEmp(nameNorm, dayOrderKey){
-    const emp = employeeData.find(e => normalizeText(e.name) === nameNorm);
-    return (emp && emp[dayOrderKey.toLowerCase()] && emp[dayOrderKey.toLowerCase()]!=="OFF") ? emp[dayOrderKey.toLowerCase()] : "OFF";
-}
-
-function updateEmployeeDropdown(){
-    const sel = c("employee-select");
-    sel.innerHTML = '<option value="">-- Chọn tên từ danh sách --</option>';
-    employeeData.sort((a,b)=>a.name.localeCompare(b.name, "vi")).forEach(e => {
-        sel.innerHTML += `<option value="${e.name}">${e.name} (${e.source.includes('qt')?'QT':'NĐ'})</option>`;
-    });
-}
-
 /* --- EVENT LISTENERS --- */
 c("excel-upload").onchange = e => {
     const f = e.target.files[0]; if(!f) return;
     const r = new FileReader();
-    r.onload = evt => {
-        const data = new Uint8Array(evt.target.result);
-        localStorage.setItem(EXCEL_KEY, btoa(data.reduce((a,i)=>a+String.fromCharCode(i),"")));
-        processExcel(data);
-    };
+    r.onload = evt => processExcel(new Uint8Array(evt.target.result));
     r.readAsArrayBuffer(f);
 };
 
@@ -365,101 +314,37 @@ c("employee-select").onchange = e => {
     const n = e.target.value; if(!n) return;
     const emp = employeeData.find(x=>x.name===n);
     daysOrder.forEach((d,i) => c("day"+i).value = emp[d.toLowerCase()] || "");
-    c("search-name").value = n;
-    renderFlightResults(n);
-};
-
-c("search-name").oninput = e => {
-    const q = normalizeText(e.target.value); const box = c("suggestions");
-    if(!q){ box.classList.add("hidden"); return; }
-    const matches = [...new Set(flightData.map(f=>f.nameOnly))].filter(n=>normalizeText(n).includes(q)).slice(0,10);
-    if(!matches.length){ box.classList.add("hidden"); return; }
-    box.innerHTML = matches.map(n=>`<div class="px-4 py-3 hover:bg-blue-50 cursor-pointer font-bold text-sm text-slate-700 border-b last:border-0">${n}</div>`).join("");
-    box.classList.remove("hidden");
-    box.querySelectorAll("div").forEach(div => div.onclick = () => {
-        c("search-name").value = div.textContent; box.classList.add("hidden"); renderFlightResults(div.textContent);
-    });
+    c("search-name").value = n; renderFlightResults(n);
 };
 
 c("calc-week").onclick = () => {
-    const tbody = c("result-body"); tbody.innerHTML = ""; let total = 0;
+    const tbody = c("result-body"); tbody.innerHTML = ""; let tot = 0;
     days.forEach((d, i) => {
         const v = c("day"+i).value.trim(); if(!v) return;
         v.split(";").forEach((p, idx) => {
             const r = parseShift(p);
             if(r.dur > 0){
-                tbody.innerHTML += `<tr class="hover:bg-blue-50/50">
-                    <td class="py-3 px-3 font-bold text-blue-900">${idx===0?d:''}</td>
-                    <td><span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-100">${p}</span></td>
-                    <td class="text-center font-mono text-xs text-slate-600">${fmtHoursToHHMM(r.start)}</td>
-                    <td class="text-center font-mono text-xs text-slate-600">${fmtHoursToHHMM(r.end)}</td>
-                    <td class="text-center font-bold text-blue-600">${r.dur.toFixed(1)}h</td>
-                </tr>`;
-                total += r.dur;
+                tbody.innerHTML += `<tr><td class="py-3 px-3 font-bold">${idx===0?d:''}</td><td><span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-100">${p}</span></td><td class="text-center font-mono text-xs">${fmtHours(r.start)}</td><td class="text-center font-mono text-xs">${fmtHours(r.end)}</td><td class="text-center font-bold text-blue-600">${r.dur.toFixed(1)}h</td></tr>`;
+                tot += r.dur;
             }
         });
     });
-    tbody.innerHTML += `<tr class="bg-slate-800 text-white font-bold"><td colspan="4" class="p-3 uppercase text-[10px]">TỔNG CỘNG TUẦN</td><td class="text-center py-3 text-lg">${total.toFixed(1)}h</td></tr>`;
+    tbody.innerHTML += `<tr class="bg-slate-800 text-white font-bold"><td colspan="4" class="p-3 text-[10px]">TỔNG CỘNG</td><td class="text-center text-lg">${tot.toFixed(1)}h</td></tr>`;
     c("result-container").classList.remove("hidden");
-    c("result-container").scrollIntoView({behavior:"smooth"});
 };
 
 c("clear-ui").onclick = () => { days.forEach((_,i)=>c("day"+i).value=""); c("result-container").classList.add("hidden"); };
-c("clear-all-data").onclick = () => { if(confirm("Xóa toàn bộ lịch đã lưu?")) { localStorage.clear(); location.reload(); } };
+c("btn-refresh").onclick = () => location.reload();
 
-function showToast(m){ const t=document.createElement('div'); t.className='toast'; t.textContent=m; document.body.appendChild(t); setTimeout(()=>t.remove(),2500); }
-
-c("btn-find-help").onclick = () => {
-    const fH = parseFloat(c('help-from-h').value), tH = parseFloat(c('help-to-h').value);
-    const fD = c('help-from-day').value, tD = c('help-to-day').value;
-    if(isNaN(fH) || isNaN(tH)) return showToast("⚠️ Nhập đầy đủ giờ!");
-    
-    const useSup = c('chk-sup').checked, useGate = c('chk-gate').checked;
-    let target = employeeData;
-    if(useSup || useGate){
-        let filterList = [];
-        if(useSup) filterList = [...filterList, ...teamSUP];
-        if(useGate) filterList = [...filterList, ...teamGATE];
-        target = employeeData.filter(e => filterList.some(tn => normalizeText(tn) === normalizeText(e.name)));
-    }
-
-    let free = [];
-    const absS = dayMap[fD]*24 + fH, absE = dayMap[tD]*24 + tH;
-
-    target.forEach(e => {
-        let busy = false;
-        [fD, tD].forEach(dk => {
-            (e[daysOrder[dayMap[dk]].toLowerCase()]||"").split(";").forEach(p => {
-                const r = parseShift(p);
-                if(r.dur > 0){
-                    const s = dayMap[dk]*24+r.start, eT = dayMap[dk]*24+r.end;
-                    if(Math.max(absS, s) < Math.min(absE, eT)) busy = true;
-                }
-            });
-        });
-        if(!busy) free.push(e.name);
-    });
-
-    c('help-list').innerHTML = free.length ? [...new Set(free)].map(n => `<li class="bg-emerald-50 text-emerald-800 p-2.5 rounded-xl border border-emerald-100 font-bold text-sm">🟢 ${n}</li>`).join("") : "<li class='text-center py-4 text-slate-400'>Không có ai rảnh</li>";
-    c('help-result-box').classList.remove("hidden");
-};
-
-/* --- KHỞI TẠO TRANG --- */
+/* --- KHỞI TẠO --- */
 document.addEventListener("DOMContentLoaded", () => {
     const box = c("days-container");
     days.forEach((d,i) => {
-        box.innerHTML += `<div class="day-container shadow-sm border border-slate-100"><label class="block text-[10px] font-black text-slate-400 uppercase mb-1">${d}</label>
-        <input id="day${i}" type="text" placeholder="Trống..." class="w-full bg-transparent text-base font-bold text-slate-800 outline-none"></div>`;
+        box.innerHTML += `<div class="day-container"><label class="block text-[10px] font-black text-slate-400 uppercase mb-1">${d}</label><input id="day${i}" type="text" placeholder="Trống..." class="w-full bg-transparent font-bold outline-none"></div>`;
     });
     const opts = days.map((d,i) => `<option value="${daysOrder[i].toLowerCase()}">${d}</option>`).join("");
     c('help-from-day').innerHTML = opts; c('help-to-day').innerHTML = opts;
-
-    const saved = localStorage.getItem(EXCEL_KEY);
-    if(saved){
-        const bin = atob(saved); const arr = new Uint8Array(bin.length);
-        for(let i=0; i<bin.length; i++) arr[i] = bin.charCodeAt(i);
-        processExcel(arr);
-    }
+    syncFromFirebase();
 });
 </script>
 </body>
