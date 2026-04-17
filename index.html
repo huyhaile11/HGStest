@@ -27,8 +27,6 @@
     .details-open .arrow-icon { transform: rotate(180deg); }
     .details-content { display: none; }
     .details-open .details-content { display: block; }
-    .file-input-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; }
-    .file-input-wrapper input[type=file] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
     #loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: flex; justify-content: center; align-items: center; z-index: 10000; visibility: hidden; }
   </style>
 </head>
@@ -58,7 +56,7 @@
 
     <div id="result-container" class="hidden glass-card p-5">
       <div class="section-title">📊 Tổng hợp tuần</div>
-      <div id="result-body-table" class="overflow-hidden rounded-xl border border-slate-100">
+      <div class="overflow-hidden rounded-xl border border-slate-100">
         <table class="w-full text-sm">
           <thead class="bg-slate-800 text-white">
             <tr><th class="px-3 py-3 text-left">Thứ</th><th class="px-3 py-3 text-left">Ca</th><th class="px-3 py-3 text-center">Vào</th><th class="px-3 py-3 text-center">Ra</th><th class="px-3 py-3 text-center">Tổng</th></tr>
@@ -73,51 +71,19 @@
       <div class="relative mb-4">
         <input id="search-name" type="text" placeholder="Nhập tên nhân viên..." class="w-full border border-slate-200 rounded-xl px-4 py-3 pl-10 font-semibold outline-none focus:ring-2 focus:ring-indigo-400">
         <span class="absolute left-3 top-4 opacity-40">👤</span>
-        <div id="suggestions" class="absolute w-full bg-white border border-slate-200 rounded-xl shadow-xl mt-1 hidden z-50 max-h-60 overflow-y-auto"></div>
       </div>
       <div id="flight-result-area" class="space-y-3"></div>
     </div>
 
-    <div class="glass-card p-5 border-t-4 border-t-emerald-500">
-      <div class="section-title text-emerald-700">🤝 Tìm người làm hộ</div>
-      <div class="grid grid-cols-2 gap-3 mb-4">
-        <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-          <p class="text-[10px] font-bold text-emerald-600 uppercase">Từ lúc</p>
-          <div class="flex gap-1">
-            <select id="help-from-day" class="flex-1 bg-transparent text-sm font-bold outline-none"></select>
-            <input id="help-from-h" type="number" step="0.5" placeholder="0.0" class="w-12 text-center border-b border-emerald-300 font-bold">
-          </div>
-        </div>
-        <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-          <p class="text-[10px] font-bold text-emerald-600 uppercase">Đến lúc</p>
-          <div class="flex gap-1">
-            <select id="help-to-day" class="flex-1 bg-transparent text-sm font-bold outline-none"></select>
-            <input id="help-to-h" type="number" step="0.5" placeholder="0.0" class="w-12 text-center border-b border-emerald-300 font-bold">
-          </div>
-        </div>
-      </div>
-      <div class="flex justify-center gap-4 mb-4">
-          <label class="flex items-center gap-1.5 text-sm font-bold text-blue-700 cursor-pointer"><input type="checkbox" id="chk-sup"> Team SUP</label>
-          <label class="flex items-center gap-1.5 text-sm font-bold text-orange-700 cursor-pointer"><input type="checkbox" id="chk-gate"> Team GATE</label>
-      </div>
-      <button id="btn-find-help" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg">🔍 TÌM NGƯỜI RẢNH</button>
-      <div id="help-result-box" class="hidden mt-3 p-3 bg-white rounded-xl border border-emerald-200 max-h-52 overflow-y-auto">
-          <ul id="help-list" class="grid grid-cols-1 gap-1.5"></ul>
-      </div>
-    </div>
-
     <div class="glass-card p-6 bg-slate-100 border-2 border-slate-200">
         <div class="section-title text-slate-700">⚙️ QUẢN LÝ DỮ LIỆU CHUNG</div>
-        <p class="text-[11px] text-slate-500 mb-4 font-medium italic italic">Dữ liệu tải lên đây sẽ được cập nhật cho **tất cả mọi người** cùng xem.</p>
         <div class="space-y-4">
-            <div class="file-input-wrapper">
-                <button class="w-full bg-white border-2 border-dashed border-blue-400 text-blue-600 font-bold py-4 rounded-xl hover:bg-blue-50">
-                    📁 TẢI LỊCH EXCEL LÊN HỆ THỐNG
-                </button>
-                <input type="file" id="excel-upload" accept=".xls,.xlsx">
+            <div class="relative overflow-hidden inline-block w-full">
+                <button class="w-full bg-white border-2 border-dashed border-blue-400 text-blue-600 font-bold py-4 rounded-xl hover:bg-blue-50">📁 TẢI LỊCH EXCEL LÊN HỆ THỐNG</button>
+                <input type="file" id="excel-upload" accept=".xls,.xlsx" class="absolute left-0 top-0 opacity-0 w-full h-full cursor-pointer">
             </div>
             <div class="flex items-center justify-between pt-2">
-                <span class="text-[10px] font-bold text-slate-400">Lưu ý: Chỉ Admin mới nên up file để tránh loạn dữ liệu.</span>
+                <span class="text-[10px] font-bold text-slate-400 uppercase">Cột M: FLT | Cột N: ETD | O-R: SUP/GATE/KS/WLC | S-AE: TV</span>
                 <button id="btn-refresh" class="text-blue-500 text-[11px] font-bold hover:underline">🔄 LÀM MỚI</button>
             </div>
         </div>
@@ -129,7 +95,7 @@
   </div>
 
 <script>
-/* --- CẤU HÌNH FIREBASE (HÃY THAY BẰNG KEY CỦA BẠN) --- */
+/* --- FIREBASE CONFIG --- */
 const firebaseConfig = {
   apiKey: "AIzaSyA2scrs8GpNAWZ5ETId6z3vkUMmArD1yn8",
   authDomain: "hgs36-6db0b.firebaseapp.com",
@@ -146,14 +112,11 @@ const db = firebase.database();
 const c = id => document.getElementById(id);
 const days = ["Thứ Hai","Thứ Ba","Thứ Tư","Thứ Năm","Thứ Sáu","Thứ Bảy","Chủ Nhật"];
 const daysOrder = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
-const dayMap = {"mon":0, "tue":1, "wed":2, "thu":3, "fri":4, "sat":5, "sun":6};
-const teamSUP = ["TUYỀN 1", "HIỂN 1", "BÌNH 1", "ANH 22", "NGỌC 5", "ĐIỆP 3", "ĐƯỢC 1", "YẾN 5", "TÙNG 13"];
-const teamGATE = ["CHUNG 1", "PHƯƠNG 6", "NGỌC 5", "THANH 6", "YẾN 8", "BÍCH 1", "THỦY 3", "QUYÊN 11", "YẾN 5"];
 
 let employeeData = [];
 let flightData = [];
 
-/* --- TIỆN ÍCH --- */
+/* --- UTILS --- */
 function showLoading(s){ c('loading-overlay').style.visibility = s ? 'visible' : 'hidden'; }
 function showToast(m){ const t=document.createElement('div'); t.className='toast'; t.textContent=m; document.body.appendChild(t); setTimeout(()=>t.remove(),2500); }
 function normalizeText(s){ return s ? s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g,'d').replace(/Đ/g,'D').replace(/[^A-Z0-9\s\-]/gi,'').trim().replace(/\s+/g,' ').toUpperCase() : ""; }
@@ -178,60 +141,83 @@ function parseShift(str){
 }
 function fmtHours(t){ const hh=Math.floor(t%24); const mm=Math.round((t%1)*60); return String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0"); }
 
-/* --- XỬ LÝ DỮ LIỆU EXCEL NỘI ĐỊA --- */
+/* --- XỬ LÝ EXCEL THEO YÊU CẦU --- */
 function processExcel(data){
     showLoading(true);
     const wb = XLSX.read(data, {type:"array"});
     let allEmp = [];
+    
+    // 1. Đọc Chấm công (Cột B, và các cặp cột CE, FH, IK, LN, OQ, RT, UW)
     ["bảng chấm công qt","bảng chấm công nđ"].forEach(t => {
         const sn = wb.SheetNames.find(n => n.trim().toLowerCase() === t);
         if(sn){
             const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], {header:1});
             rows.slice(1).forEach(row => {
                 if(row[1]) allEmp.push({
-                    name: String(row[1]).trim(), source: t,
-                    mon: (row[2]||"")+(row[4]?';'+row[4]:""), tue: (row[5]||"")+(row[7]?';'+row[7]:""),
-                    wed: (row[8]||"")+(row[10]?';'+row[10]:""), thu: (row[11]||"")+(row[13]?';'+row[13]:""),
-                    fri: (row[14]||"")+(row[16]?';'+row[16]:""), sat: (row[17]||"")+(row[19]?';'+row[19]:""),
+                    name: String(row[1]).trim(), 
+                    mon: (row[2]||"")+(row[4]?';'+row[4]:""), 
+                    tue: (row[5]||"")+(row[7]?';'+row[7]:""), 
+                    wed: (row[8]||"")+(row[10]?';'+row[10]:""), 
+                    thu: (row[11]||"")+(row[13]?';'+row[13]:""), 
+                    fri: (row[14]||"")+(row[16]?';'+row[16]:""), 
+                    sat: (row[17]||"")+(row[19]?';'+row[19]:""), 
                     sun: (row[20]||"")+(row[22]?';'+row[22]:"")
                 });
             });
         }
     });
 
+    // 2. Đọc Chuyến bay (Cột M, N và nhân viên cùng dòng)
     let allFlt = [];
-    const namePattern = /([\p{L}Đđ\s\-]+?)\s+(\d{1,4})/ug;
+    const namePattern = /([\p{L}Đđ\s\-]+?)(?:\s+(\d{1,4}))?$/u;
+
     daysOrder.forEach(dName => {
         const sn = wb.SheetNames.find(n => n.trim().toUpperCase() === dName);
         if(!sn) return;
         const sheet = wb.Sheets[sn];
-        let lastFlt="", lastEtd="", lastGate="";
-        for(let r=4; r<=27; r++){
-            const fV=sheet['I'+r]?sheet['I'+r].v:null, eV=sheet['J'+r]?sheet['J'+r].v:null, gV=sheet['L'+r]?sheet['L'+r].v:null;
-            const flt=fV?String(fV).trim():lastFlt, etd=eV!==undefined?excelTimeToHHMM(eV):lastEtd, gate=gV?String(gV).trim():lastGate;
-            if(!flt) continue; lastFlt=flt; lastEtd=etd; lastGate=gate;
+        
+        for(let r=4; r<=150; r++){ // Quét tối đa 150 dòng
+            const fCell = sheet[XLSX.utils.encode_cell({c:12, r:r})]; // Cột M
+            const eCell = sheet[XLSX.utils.encode_cell({c:13, r:r})]; // Cột N
+            
+            // CHỈ XỬ LÝ NẾU DÒNG CÓ SỐ HIỆU CHUYẾN BAY (CỘT M)
+            if(!fCell || !fCell.v) continue;
 
-            for(let cIdx=10; cIdx<=26; cIdx++){
-                const cell = sheet[XLSX.utils.encode_col(cIdx)+r];
+            const flt = String(fCell.v).trim();
+            const etd = eCell !== undefined ? excelTimeToHHMM(eCell.v) : "";
+
+            // Quét từ O (14) đến AE (30) TRÊN CÙNG DÒNG R NÀY
+            for(let cIdx=14; cIdx<=30; cIdx++){
+                const cell = sheet[XLSX.utils.encode_cell({c:cIdx, r:r})];
                 if(cell && cell.v){
-                    const matches = [...String(cell.v).matchAll(namePattern)];
-                    const colLet = XLSX.utils.encode_col(cIdx);
-                    matches.forEach(m => {
-                        const nRaw = (m[1].trim()+' '+m[2].trim()).toUpperCase();
-                        allFlt.push({ sheet: dName, flt, etd, gate, nameOnly: nRaw, nameNormalized: normalizeText(nRaw), isSup: colLet==='K', isGate: colLet==='L', isKetso: colLet==='M', isWlc: colLet==='N' });
+                    const rawLines = String(cell.v).trim().split('\n');
+                    rawLines.forEach(line => {
+                        const m = line.trim().match(namePattern);
+                        if(m){
+                            const fullName = m[0].trim().toUpperCase();
+                            allFlt.push({
+                                sheet: dName, flt, etd,
+                                nameOnly: fullName,
+                                nameNormalized: normalizeText(fullName),
+                                isSup: (cIdx === 14), // O
+                                isGate: (cIdx === 15), // P
+                                isKetso: (cIdx === 16), // Q
+                                isWlc: (cIdx === 17), // R
+                                isTv: (cIdx >= 18) // S-AE
+                            });
+                        }
                     });
                 }
             }
         }
     });
 
-    // ĐẨY LÊN FIREBASE
     db.ref('hgs_nd_data').set({ employeeData: allEmp, flightData: allFlt })
-    .then(() => { showLoading(false); showToast("🚀 Đã tải lên và chia sẻ cho mọi người!"); })
-    .catch(err => { showLoading(false); alert("Lỗi tải lên: " + err.message); });
+    .then(() => { showLoading(false); showToast("🚀 Đã cập nhật đúng logic dòng!"); })
+    .catch(err => { showLoading(false); alert("Lỗi: " + err.message); });
 }
 
-/* --- ĐỒNG BỘ DỮ LIỆU TỪ FIREBASE --- */
+/* --- ĐỒNG BỘ & HIỂN THỊ --- */
 function syncFromFirebase(){
     showLoading(true);
     db.ref('hgs_nd_data').on('value', snapshot => {
@@ -240,7 +226,6 @@ function syncFromFirebase(){
             employeeData = val.employeeData || [];
             flightData = val.flightData || [];
             updateDropdown();
-            showToast("📥 Đã cập nhật lịch mới nhất!");
         }
         showLoading(false);
     });
@@ -248,50 +233,56 @@ function syncFromFirebase(){
 
 function updateDropdown(){
     const sel = c("employee-select");
+    const oldVal = sel.value;
     sel.innerHTML = '<option value="">-- Chọn tên từ danh sách --</option>';
     employeeData.sort((a,b)=>a.name.localeCompare(b.name, "vi")).forEach(e => {
         sel.innerHTML += `<option value="${e.name}">${e.name}</option>`;
     });
+    if(oldVal) sel.value = oldVal;
 }
 
 function renderFlightResults(nameRaw){
     const container = c("flight-result-area");
     const qNorm = normalizeText(nameRaw);
-    const myF = []; const seen = new Set();
-    flightData.filter(f => f.nameNormalized === qNorm).forEach(f => {
-        const k = `${f.sheet}-${f.flt}-${f.etd}`;
-        if(!seen.has(k)){ myF.push(f); seen.add(k); }
-    });
-    if(!myF.length){ container.innerHTML = "<p class='text-center text-slate-400 py-6 italic'>Không có dữ liệu.</p>"; return; }
+    const myFlights = flightData.filter(f => f.nameNormalized === qNorm);
+    
+    if(!myFlights.length){ 
+        container.innerHTML = "<p class='text-center text-slate-400 py-6 italic'>Nhân viên này không có chuyến bay nào.</p>"; 
+        return; 
+    }
 
     let html = "";
     daysOrder.forEach(day => {
-        const dayF = myF.filter(f => f.sheet === day);
+        const dayF = myFlights.filter(f => f.sheet === day);
         if(!dayF.length) return;
-        html += `<div class="p-3 bg-white border border-slate-200 rounded-2xl shadow-sm mb-3"><div class="font-bold text-blue-800 text-xs mb-2 px-1">📅 ${day}</div>`;
+
+        html += `<div class="p-3 bg-white border border-slate-200 rounded-2xl shadow-sm mb-3">
+                    <div class="font-bold text-blue-800 text-xs mb-2 px-1 uppercase">📅 ${day}</div>`;
+        
         dayF.forEach((mf, i) => {
             const accId = `acc-${day}-${i}`;
-            const colleagues = []; const sCol = new Set();
-            flightData.filter(f => f.sheet===day && f.flt===mf.flt && f.etd===mf.etd).forEach(c => {
-                if(!sCol.has(c.nameOnly)){ colleagues.push(c); sCol.add(c.nameOnly); }
-            });
-            const pos = mf.isSup?'SUP':mf.isGate?'GATE':mf.isKetso?'KS':mf.isWlc?'WLC':'...';
+            const colleagues = flightData.filter(f => f.sheet === day && f.flt === mf.flt && f.etd === mf.etd);
+            const pos = mf.isSup?'SUP':mf.isGate?'GATE':mf.isKetso?'KS':mf.isWlc?'WLC':'TV';
+
             html += `<div class="border-b last:border-0 pb-2 mb-2" id="${accId}">
                 <div class="flex items-center justify-between cursor-pointer" onclick="document.getElementById('${accId}').classList.toggle('details-open')">
                     <div class="flex items-center gap-2">
                         <span class="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-black">${mf.flt}</span>
                         <span class="text-sm font-bold text-slate-700">${mf.etd}</span>
-                        <span class="text-[10px] font-bold text-rose-500">[${pos}]</span>
+                        <span class="text-[10px] font-bold text-rose-500 uppercase">[${pos}]</span>
                     </div>
                     <span class="arrow-icon text-slate-300">▼</span>
                 </div>
-                <div class="details-content mt-2 bg-slate-50 rounded-xl p-2 animate-fadeIn"><table class="staff-sub-table w-full">`;
+                <div class="details-content mt-2 bg-slate-50 rounded-xl p-2">
+                    <table class="staff-sub-table w-full">`;
+            
             colleagues.forEach(col => {
                 const emp = employeeData.find(e => normalizeText(e.name) === col.nameNormalized);
-                const shift = (emp && emp[day.toLowerCase()]) ? emp[day.toLowerCase()] : "OFF";
+                const shift = emp ? (emp[day.toLowerCase()] || "OFF") : "---";
+                const role = col.isSup?'SUP':col.isGate?'GATE':col.isKetso?'KS':col.isWlc?'WLC':'TV';
                 html += `<tr class="${col.nameNormalized===qNorm?'bg-blue-100/60':''}">
                     <td class="font-bold text-slate-800">${col.nameOnly}</td>
-                    <td class="text-[10px] font-bold text-blue-600">${col.isSup?'SUP':col.isGate?'GATE':col.isKetso?'KS':'WLC'}</td>
+                    <td class="text-[10px] font-bold text-blue-600 uppercase">${role}</td>
                     <td class="text-right font-mono font-bold text-slate-500">${shift}</td>
                 </tr>`;
             });
@@ -302,7 +293,7 @@ function renderFlightResults(nameRaw){
     container.innerHTML = html;
 }
 
-/* --- EVENT LISTENERS --- */
+/* --- EVENTS --- */
 c("excel-upload").onchange = e => {
     const f = e.target.files[0]; if(!f) return;
     const r = new FileReader();
@@ -313,9 +304,11 @@ c("excel-upload").onchange = e => {
 c("employee-select").onchange = e => {
     const n = e.target.value; if(!n) return;
     const emp = employeeData.find(x=>x.name===n);
-    daysOrder.forEach((d,i) => c("day"+i).value = emp[d.toLowerCase()] || "");
+    if(emp) daysOrder.forEach((d,i) => c("day"+i).value = emp[d.toLowerCase()] || "");
     c("search-name").value = n; renderFlightResults(n);
 };
+
+c("search-name").oninput = e => renderFlightResults(e.target.value);
 
 c("calc-week").onclick = () => {
     const tbody = c("result-body"); tbody.innerHTML = ""; let tot = 0;
@@ -336,14 +329,11 @@ c("calc-week").onclick = () => {
 c("clear-ui").onclick = () => { days.forEach((_,i)=>c("day"+i).value=""); c("result-container").classList.add("hidden"); };
 c("btn-refresh").onclick = () => location.reload();
 
-/* --- KHỞI TẠO --- */
 document.addEventListener("DOMContentLoaded", () => {
     const box = c("days-container");
     days.forEach((d,i) => {
-        box.innerHTML += `<div class="day-container"><label class="block text-[10px] font-black text-slate-400 uppercase mb-1">${d}</label><input id="day${i}" type="text" placeholder="Trống..." class="w-full bg-transparent font-bold outline-none"></div>`;
+        box.innerHTML += `<div class="day-container"><label class="block text-[10px] font-black text-slate-400 uppercase mb-1">${d}</label><input id="day${i}" type="text" placeholder="..." class="w-full bg-transparent font-bold outline-none"></div>`;
     });
-    const opts = days.map((d,i) => `<option value="${daysOrder[i].toLowerCase()}">${d}</option>`).join("");
-    c('help-from-day').innerHTML = opts; c('help-to-day').innerHTML = opts;
     syncFromFirebase();
 });
 </script>
